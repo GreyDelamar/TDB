@@ -3,7 +3,7 @@
     dense
     :items="servers"
     @update:open="open"
-    item-key="key"
+    item-key="guiID"
     hoverable
     open-on-click
     :search="searchTerm"
@@ -11,7 +11,7 @@
   >
     <template v-slot:prepend="{ item }">
       <v-icon>
-        {{ "fa-" + item.icon }}
+        {{ "fa-" + item.guiType }}
       </v-icon>
     </template>
     <template v-slot:append="{ item }">
@@ -54,14 +54,12 @@ export default {
   mounted() {
     const $self = this;
 
-    console.log(this.servers);
     if (this.servers && this.servers.length) {
       for (let i = 0; i < this.servers.length; i++) {
         const el = this.servers[i];
         if (!$self.local_data[el.key]) $self.local_data[el.key] = el;
       }
     }
-    console.log(this.servers);
   },
 
   updated() {
@@ -82,7 +80,7 @@ export default {
 
   methods: {
     toObject(arr) {
-      return arr.reduce(function(acc, cur, i) {
+      return arr.reduce(function(acc, cur) {
         acc[cur.key] = cur;
         return acc;
       }, {});
@@ -188,11 +186,11 @@ export default {
   },
 
   watch: {
-    servers(val, oldVal) {
+    servers(val) {
       const $self = this;
       for (let i = 0; i < val.length; i++) {
         const el = val[i];
-        if (!$self.local_data[el.key]) $self.local_data[el.key] = el;
+        if (!$self.local_data[el.guiID]) $self.local_data[el.guiID] = el;
       }
     }
   }

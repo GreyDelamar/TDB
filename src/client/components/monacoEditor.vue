@@ -3,10 +3,9 @@
 </template>
 
 <script>
-// import * as monaco from 'monaco-editor/esm/vs/editor/editor.main';
-import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import sqlHighlight from "monaco-editor/esm/vs/basic-languages/sql/sql.contribution";
-// import commands from 'monaco-editor/esm/vs/editor/browser/editorExtensions.js';
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.main';
+// import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+// import sqlHighlight from "monaco-editor/esm/vs/basic-languages/sql/sql.contribution"; // eslint-disable-line
 
 export { monaco };
 
@@ -26,7 +25,7 @@ export default {
     options: {
       type: Object,
       default() {
-        return { automaticLayout: true };
+        return {};
       }
     },
     editorMounted: { type: Function, default: noop },
@@ -81,7 +80,7 @@ export default {
 
   mounted() {
     monaco.languages.registerDocumentFormattingEditProvider("sql", {
-      async provideDocumentFormattingEdits(model, options, token) {
+      async provideDocumentFormattingEdits(model) {
         const sqlFormatter = await import("sql-formatter");
 
         const text = sqlFormatter.format(model.getValue());
@@ -193,3 +192,8 @@ export default {
   }
 };
 </script>
+<style>
+  .view-lines {
+    text-align: left !important;
+  }
+</style>

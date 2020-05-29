@@ -5,10 +5,7 @@
     max-width="600px"
     :overlay-opacity="0.95"
   >
-    <template v-slot:activator="{ on }">
-      <v-btn color="primary" dark v-on="on">Open Dialog</v-btn>
-    </template>
-    <v-card>
+    <v-card @keyup.enter="submit">
       <v-card-title>
         <span class="headline">User Profile</span>
       </v-card-title>
@@ -49,7 +46,7 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { ipcRenderer } from 'electron';
 
 export default {
   name: "menuSearch",
@@ -63,6 +60,17 @@ export default {
     username: "",
     password: ""
   }),
+
+  mounted () {
+    ipcRenderer.on('server:addConnection:result', (e, data) => {
+      if (data.success && data.opts) {
+        this.$store.commit('serverAdd', data.server)
+        this.$store.commit('connectionAdd', data.opts)
+
+        this.dialogTemp = false
+      }
+    })
+  },
 
   computed: {
     dialogTemp: {
@@ -84,12 +92,7 @@ export default {
         password: $self.password
       };
 
-      $self.$http.post("http://localhost:3000/login", data).then(d => {
-        if (d.data.token) {
-          $self.$store.commit("serverAdd", d.data);
-          $self.$store.commit("showLogin", false);
-        }
-      });
+      ipcRenderer.send('server:addConnection', data)
     }
   }
 };

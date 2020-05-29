@@ -1,15 +1,18 @@
 "use strict";
 
-import { app, protocol, BrowserWindow } from "electron";
+import { app, protocol, BrowserWindow, ipcMain } from "electron";
 import {
   createProtocol
   /* installVueDevtools */
 } from "vue-cli-plugin-electron-builder/lib";
+import { config } from '@vue/test-utils';
 const isDevelopment = process.env.NODE_ENV !== "production";
+// import dbWorker from './dbWorker'
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win;
+let win: BrowserWindow | null;
+let dbWin: BrowserWindow | null;
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -22,24 +25,63 @@ function createWindow() {
     width: 1400,
     height: 900,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: isDevelopment,
+      // contextIsolation: true
     }
   });
 
+  dbWin = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    webPreferences: {
+      nodeIntegration: isDevelopment,
+      // contextIsolation: true
+    }
+  });
+
+
   if (process.env.WEBPACK_DEV_SERVER_URL) {
+    console.log('asfdsag');
+
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
+    dbWin.loadURL(process.env.WEBPACK_DEV_SERVER_URL + '/dbClient.html');
     if (!process.env.IS_TEST) win.webContents.openDevTools();
+    if (!process.env.IS_TEST) dbWin.webContents.openDevTools();
   } else {
     createProtocol("app");
     // Load the index.html when not in development
     win.loadURL("app://./index.html");
+    dbWin.loadURL("app://./dbClient.html'")
   }
 
   win.on("closed", () => {
     win = null;
   });
+
 }
+
+
+//  add connection
+ipcMain.on('server:addConnection', (e, config: any) => {
+  if (dbWin) dbWin.webContents.send('server:addConnection', config);
+})
+
+ipcMain.on('server:addConnection:result', (e, result: any) => {
+  if (win) win.webContents.send('server:addConnection:result', result);
+})
+
+
+
+ipcMain.on('server:getDatabases', (e, config) => {
+  if (dbWin) dbWin.webContents.send('server:getDatabases', config);
+})
+
+ipcMain.on('server:getDatabases:result', (e, result) => {
+  if (dbWin) dbWin.webContents.send('server:getDatabases:result', result);
+})
+
+
 
 // Quit when all windows are closed.
 app.on("window-all-closed", () => {
@@ -77,6 +119,27 @@ app.on("ready", async () => {
   }
   createWindow();
 });
+
+// app.on("remote-require", (event, webContents, moduleName) => {
+//   if (!isDevelopment) event.preventDefault();
+// });
+
+// // built-ins are modules such as "app"
+// app.on("remote-get-builtin", (event, webContents, moduleName) => {
+//   if (!isDevelopment) event.preventDefault();
+// });
+
+// app.on("remote-get-global", (event, webContents, globalName) => {
+//   if (!isDevelopment) event.preventDefault();
+// });
+
+// app.on("remote-get-current-window", (event, webContents) => {
+//   if (!isDevelopment) event.preventDefault();
+// });
+
+// app.on("remote-get-current-web-contents", (event, webContents) => {
+//   if (!isDevelopment) event.preventDefault();
+// });
 
 // Exit cleanly on request from parent process in development mode.
 if (isDevelopment) {

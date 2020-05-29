@@ -3,9 +3,27 @@ import Vuex from "vuex";
 
 Vue.use(Vuex);
 
+
+export interface connection {
+  server: string
+  username: string
+  user: string
+  guiID: string
+  port: number
+  database: string
+}
+
+export interface server {
+  name:  string
+  guiID: string
+  guiType: string
+}
+
+
 export default new Vuex.Store({
   state: {
-    servers: [],
+    connections: Array<connection>(),
+    servers: Array<server>(),
     showLogin: true
   },
   mutations: {
@@ -14,7 +32,7 @@ export default new Vuex.Store({
       window.localStorage.setItem("servers", JSON.stringify(context.servers));
     },
     serverRemove(context, val) {
-      context.servers = context.servers.filter(d => d.token !== val);
+      context.servers = context.servers.filter(d => d.guiID !== val);
       window.localStorage.setItem("servers", JSON.stringify(context.servers));
     },
     serverReplace(context, val) {
@@ -32,7 +50,17 @@ export default new Vuex.Store({
     },
     showLogin(context, val) {
       context.showLogin = val;
-    }
+    },
+    serverConnect(context, config) {
+    },
+    connectionAdd(context, val) {
+      context.connections.push(val);
+      window.localStorage.setItem("connections", JSON.stringify(context.connections));
+    },
+    connectionRemove(context, val) {
+      context.connections = context.connections.filter(d => d.guiID !== val);
+      window.localStorage.setItem("connections", JSON.stringify(context.connections));
+    },
   },
   actions: {},
   modules: {}
