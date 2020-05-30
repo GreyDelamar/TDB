@@ -60,9 +60,8 @@ export default class connectionProvider {
 
     try{
       // test connection
-      let conn = await sql.newConnection()
+      await sql.newConnection()
       this.connections[opts.guiID] = { config: opts, client: sql }
-      await conn.close()
       return {success: true, message: "success"}
     } catch (err) {
       return {success: false, message: "fail"}
