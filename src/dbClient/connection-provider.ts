@@ -58,8 +58,8 @@ export default class connectionProvider {
 
     let sql = new sqlServer(opts, opts.guiID)
 
-    // test connection
     try{
+      // test connection
       let conn = await sql.newConnection()
       this.connections[opts.guiID] = { config: opts, client: sql }
       await conn.close()

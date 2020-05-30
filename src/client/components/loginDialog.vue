@@ -42,7 +42,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn text @click="submit">Login</v-btn>
+        <v-btn v-bind:disabled="btnDisable" text @click="submit">Login</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -62,25 +62,16 @@ export default {
     server: "",
     username: "",
     password: "",
-    error: false
+    error: false,
+    btnDisable: false,
   }),
 
   mounted () {
-    ipcRenderer.on('server:addConnection:result', (e, data) => {
-      if (data.success && data.opts) {
-        this.$store.commit('serverAdd', data.server)
-        this.$store.commit('connectionAdd', data.opts)
+    ipcRenderer.on('server:addConnection:result', this.connectionHandler)
+  },
 
-        this.server = ""
-        this.username = ""
-        this.password = ""
-        this.error = false
-
-        this.dialogTemp = false
-      } else {
-        this.error = true
-      }
-    })
+  beforeDestroy () {
+    ipcRenderer.removeListener('server:addConnection:result', this.connectionHandler)
   },
 
   computed: {
@@ -95,8 +86,29 @@ export default {
   },
 
   methods: {
+    connectionHandler (e, data) {
+      if (data.success && data.opts) {
+        this.$store.commit('serverAdd', data.server)
+        this.$store.commit('connectionAdd', data.opts)
+
+        this.server = ""
+        this.username = ""
+        this.password = ""
+        this.error = false
+        this.btnDisable = false;
+
+        this.dialogTemp = false
+      } else {
+        // error connecting to DB
+        this.btnDisable = false
+        this.error = true
+      }
+    },
     submit() {
+      this.btnDisable = true;
+      this.error = false;
       const $self = this;
+
       let data = {
         server: $self.server,
         username: $self.username,
