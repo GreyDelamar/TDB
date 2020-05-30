@@ -57,14 +57,13 @@ export default class connectionProvider {
     opts.guiID = forceGuiID ? forceGuiID : this.generateUUID()
     opts = this.cleanOpts(opts)
 
-    let sql = new sqlServer(opts)
-    await sql.newConnection(true)
+    let sql = new sqlServer(opts, opts.guiID)
+    await sql.newConnection()
 
     this.connections[opts.guiID] = { config: opts, client: sql }
   }
 
   public async getConnection (opts: connectionConfig) {
-    console.log('OPTS', opts)
     const guiID = opts.guiID;
     let connection = <connection>this.connections[guiID]
 
