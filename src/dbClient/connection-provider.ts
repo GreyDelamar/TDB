@@ -15,7 +15,7 @@ export interface connectionConfig {
 
 export interface connection {
   config: connectionConfig
-  connection: any
+  client: sqlServer
 }
 
 export interface connections {
@@ -37,7 +37,7 @@ export default class connectionProvider {
       ipcRenderer.send('server:addConnection:result', {
         success: true,
         opts: {...opts, ...{ password: undefined }},
-        server: { name: `${opts.server} - ${opts.username}`, guiID: opts.guiID, guiType: 'server' }
+        server: { name: `${opts.server} - ${opts.username}`, guiID: opts.guiID, guiType: 'server', children: [ {name: "Loading..."} ], opts }
       })
     })
   }
@@ -53,22 +53,35 @@ export default class connectionProvider {
     return v4()
   }
 
-  public async addConnection (opts: connectionConfig) {
-    opts.guiID = this.generateUUID()
+  public async addConnection (opts: connectionConfig, forceGuiID?: string | undefined) {
+    opts.guiID = forceGuiID ? forceGuiID : this.generateUUID()
     opts = this.cleanOpts(opts)
 
     let sql = new sqlServer(opts)
     await sql.newConnection(true)
 
-    this.connections[opts.guiID] = { config: opts }
+    this.connections[opts.guiID] = { config: opts, client: sql }
   }
 
-  public listConnections () {
-    console.log(this.connections)
+  public async getConnection (opts: connectionConfig) {
+    console.log('OPTS', opts)
+    const guiID = opts.guiID;
+    let connection = <connection>this.connections[guiID]
+
+    if (!this.connections[guiID]) {
+      await this.addConnection(opts, guiID)
+      connection = this.connections[guiID]
+    }
+
+    return connection.client
   }
 
-  addIPC (channel: string, listener: (event: IpcRendererEvent, ...args: any[] )=>void) {
+  public addIPC (channel: string, listener: (event: IpcRendererEvent, ...args: any[] )=>void) {
     ipcRenderer.on(channel, listener)
     return true
+  }
+
+  public send (channel: string, ...args: any[]) {
+    ipcRenderer.send(channel, ...args)
   }
 }

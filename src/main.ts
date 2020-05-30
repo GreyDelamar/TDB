@@ -72,13 +72,13 @@ ipcMain.on('server:addConnection:result', (e, result: any) => {
 })
 
 
-
+// get databases
 ipcMain.on('server:getDatabases', (e, config) => {
   if (dbWin) dbWin.webContents.send('server:getDatabases', config);
 })
 
 ipcMain.on('server:getDatabases:result', (e, result) => {
-  if (dbWin) dbWin.webContents.send('server:getDatabases:result', result);
+  if (win) win.webContents.send('server:getDatabases:result', result);
 })
 
 

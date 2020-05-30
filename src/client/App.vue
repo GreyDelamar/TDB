@@ -18,8 +18,8 @@
     </v-navigation-drawer>
 
     <!-- Sizes your content based upon application components -->
-    <v-content class="pt-0">
-      <MonacoEditor class="pa-1"></MonacoEditor>
+    <v-content class="pt-0" id="main_content">
+      <MonacoEditor class="pa-1" :width="editorWidth"></MonacoEditor>
     </v-content>
 
     <!-- <v-footer app> -->
@@ -30,6 +30,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { mapState } from "vuex";
+import ResizeObserver from 'resize-observer-polyfill';
 
 import loginDialog from "@/components/loginDialog.vue";
 import MenuSearch from "@/components/menuSearch.vue";
@@ -56,8 +57,9 @@ import MonacoEditor from "@/components/monacoEditor.vue";
   }
 })
 export default class App extends Vue {
-  navigation: { width: Number, borderSize: Number }
-  menuSearchVal: String
+  navigation: { width: number, borderSize: number }
+  menuSearchVal: string
+  editorWidth: number | boolean
   $refs!: {
     drawer: Vue
   }
@@ -66,6 +68,7 @@ export default class App extends Vue {
     super();
     this.navigation = { width: 350, borderSize: 5 }
     this.menuSearchVal = ""
+    this.editorWidth = window.innerWidth - this.navigation.width
   }
 
   beforeMount () {
@@ -80,6 +83,19 @@ export default class App extends Vue {
     this.$store.commit("serverReplace", localStorage.getItem("servers"));
     this.setBorderWidth();
     this.setEvents();
+    this.editorWidth = window.innerWidth - this.navigation.width
+
+    this.$nextTick(() => {
+      // This will resize the editor
+        const ro = new ResizeObserver((entries, observer) => {
+            for (const entry of entries) {
+                const {left, top, width, height} = entry.contentRect;
+                this.editorWidth = width
+            }
+        });
+
+        ro.observe(<Element>document.getElementById("main_content"));
+    })
   };
 
 
@@ -137,6 +153,10 @@ export default class App extends Vue {
       false
     );
   };
+
+  windowResize() {
+    this.editorWidth = window.innerWidth - this.navigation.width
+  }
 
 }
 </script>

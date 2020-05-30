@@ -104,6 +104,10 @@ export default {
   },
 
   methods: {
+    handleResize() {
+      console.log('HIT')
+    },
+
     initMonaco() {
       const $self = this;
       const { value, language, theme, options } = this;

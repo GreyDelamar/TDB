@@ -24,7 +24,8 @@ export default new Vuex.Store({
   state: {
     connections: Array<connection>(),
     servers: Array<server>(),
-    showLogin: true
+    showLogin: true,
+    monacoEditorCount: 0
   },
   mutations: {
     serverAdd(context, val) {
@@ -61,6 +62,9 @@ export default new Vuex.Store({
       context.connections = context.connections.filter(d => d.guiID !== val);
       window.localStorage.setItem("connections", JSON.stringify(context.connections));
     },
+    monacoEditorCount(context) {
+      context.monacoEditorCount = context.monacoEditorCount + 1
+    }
   },
   actions: {},
   modules: {}

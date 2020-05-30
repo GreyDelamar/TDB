@@ -43,6 +43,7 @@
 
 <script>
 import { mapState } from "vuex";
+import { ipcRenderer } from 'electron';
 
 export default {
   name: "menuTree",
@@ -57,20 +58,15 @@ export default {
     if (this.servers && this.servers.length) {
       for (let i = 0; i < this.servers.length; i++) {
         const el = this.servers[i];
-        if (!$self.local_data[el.key]) $self.local_data[el.key] = el;
+        if (!$self.local_data[el.guiID]) $self.local_data[el.guiID] = el;
       }
     }
-  },
 
-  updated() {
-    const $self = this;
-
-    if (this.servers && this.servers.length) {
-      for (let i = 0; i < this.servers.length; i++) {
-        const el = this.servers[i];
-        if (!$self.local_data[el.key]) $self.local_data[el.key] = el;
+    ipcRenderer.on('server:getDatabases:result', (e, data) => {
+      if (data.results) {
+        $self.local_data[data.guiID].children = [...data.results]
       }
-    }
+    })
   },
 
   data: () => ({
@@ -89,12 +85,13 @@ export default {
       const $self = this;
 
       if (d.length > 0) {
+        debugger
         for (let i = 0; i < d.length; i++) {
           const key = d[i];
 
           if (!$self.columnCalled[key]) {
             $self.columnCalled[key] = true;
-            let type = $self.local_data[key].type;
+            let type = $self.local_data[key].guiType;
 
             switch (type) {
               case "server":
@@ -114,17 +111,7 @@ export default {
     async getDatabases(key) {
       const $self = this;
       const server = $self.local_data[key];
-
-      let DBs = await $self.$http
-        .get(`http://localhost:3000/database/list`, {
-          headers: { token: server.token }
-        })
-        .then(d => d.data);
-      let sr = $self.servers.find(d => d.key === key);
-
-      DBs.map(d => (d.serverKey = key));
-      sr.children = DBs;
-      $self.local_data = { ...$self.local_data, ...$self.toObject(DBs) };
+      ipcRenderer.send('server:getDatabases', server.opts)
     },
     async getTables(key) {
       const $self = this;

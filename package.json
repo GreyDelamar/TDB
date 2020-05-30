@@ -55,6 +55,7 @@
     "mini-css-extract-plugin": "^0.9.0",
     "node-sass": "^4.12.0",
     "prettier": "^1.19.1",
+    "resize-observer-polyfill": "^1.5.1",
     "sass": "^1.19.0",
     "sass-loader": "^8.0.2",
     "typescript": "~3.8.3",

@@ -2,7 +2,6 @@ import Vue from 'vue'
 import { AxiosStatic } from "axios";
 
 declare module "*.vue" {
-  import Vue from "vue";
   export default Vue;
 }
 
