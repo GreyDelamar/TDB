@@ -14,19 +14,23 @@ export default class sqlServer {
   }
 
   public async newConnection (): Promise<ConnectionPool> {
-    const connConf = await new ConnectionPool(this.config)
-    const conn = await connConf.connect()
-    const result = await conn.query`select 1 AS res`
+    try {
+      const connConf = await new ConnectionPool(this.config)
+      const conn = await connConf.connect()
+      const result = await conn.query`select 1 AS res`
 
-    if (result.recordset[0].res === 1 && this.reconnectAttempts <= 3) {
-      this.reconnectAttempts = 0
-      return conn
-    } else if (this.reconnectAttempts >= 3) {
-      throw new Error(`Can't connect to the database...`)
+      if (result.recordset[0].res === 1) {
+        this.reconnectAttempts = 0
+        return conn
+      } else {
+        this.reconnectAttempts = this.reconnectAttempts + 1
+        return this.newConnection()
+      }
+    } catch (error) {
+      if (this.reconnectAttempts >= 3) throw new Error(`Can't connect to the database...`)
+      this.reconnectAttempts = this.reconnectAttempts + 1
+      return this.newConnection()
     }
-
-    this.reconnectAttempts = this.reconnectAttempts + 1
-    return this.newConnection()
   }
 
   public async getDatabases () {
