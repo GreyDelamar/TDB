@@ -11,32 +11,34 @@
     return-object
   >
     <template v-slot:prepend="{ item }">
-      <v-icon>
-        {{ "fa-" + item.guiType }}
-      </v-icon>
+      <v-tooltip top>
+        <template v-slot:activator="{ on }">
+          <v-icon v-on="on">
+            {{ "fa-" + item.guiType }}
+          </v-icon>
+        </template>
+        <span style="text-transform: capitalize;">{{ item.guiType === 'columns' ? 'column' : item.guiType }}</span>
+      </v-tooltip>
     </template>
+
     <template v-slot:append="{ item }">
-      <small v-if="item.hasOwnProperty('nullable')">
+      <!-- column text -->
+      <small v-if="item.guiType === 'columns'">
         (
-        <span v-if="item.hasOwnProperty('constraintType')">{{
-          constraintText(item.constraintType)
-        }}</span>
-        <span v-if="item.hasOwnProperty('dataType')">{{
-          item.dataType + ", "
-        }}</span>
-        <span v-if="item.hasOwnProperty('nullable')">{{
-          item.nullable ? "Null" : "Not Null"
-        }}</span>
+        <span v-if="item.hasOwnProperty('constraintType')">{{ constraintText(item.constraintType) }}</span>
+        <span v-if="item.hasOwnProperty('dataType')">{{ item.dataType + ", "}}</span>
+        <span v-if="item.hasOwnProperty('nullable')">{{ item.nullable ? "Null" : "Not Null" }}</span>
         )
       </small>
 
-      <v-tooltip v-if="item.type === 'server'" top>
-        <template v-slot:activator="{}">
-          <v-btn @click="disconnect" text>
-            <v-icon>{{ "fa-unlink" }}</v-icon>
+      <!-- disconnect -->
+      <v-tooltip v-if="item.guiType === 'server'" top>
+        <template v-slot:activator="{ on }">
+          <v-btn @click="disconnect" v-on="on" text small>
+            <v-icon style="font-size: 16px;">fa-unlink</v-icon>
           </v-btn>
         </template>
-        <span>Left tooltip</span>
+        <span>Disconnect</span>
       </v-tooltip>
     </template>
   </v-treeview>
@@ -84,6 +86,23 @@ export default {
         console.log(data.error)
       }
     })
+
+
+    ipcRenderer.on('server:getColumns:result', (e, data) => {
+      if (data.results) {
+       const server = $self.local_data[data.serverGuiID] || {}
+       const sChildren = server.children || []
+       const database = sChildren.find(d => d.guiID === data.databaseGuiID) || {}
+       const dChildren = database.children || []
+       const target = dChildren.find(d => d.guiID === data.tableGuiID) || {}
+
+       target.children = [...data.results]
+      } else if (data.error) {
+        $self.columnCalled[data.databaseGuiID] = undefined
+        console.log(data.error)
+      }
+    })
+
   },
 
   data: () => ({
@@ -120,7 +139,7 @@ export default {
                 $self.getTables(key, el.name, guiID);
                 break;
               case "table":
-                $self.getColumns(key);
+                $self.getColumns($self, key, el);
                 break;
             }
           }
@@ -135,25 +154,9 @@ export default {
       const server = this.local_data[key];
       ipcRenderer.send('server:getTables', server.opts, databaseName, databaseGuiID)
     },
-    async getColumns(tableName) {
-      const $self = this;
-      const target = $self.local_data[tableName];
-      const db = $self.local_data[target.dbKey];
-      const server = $self.local_data[target.serverKey];
-
-      let columns = await $self.$http
-        .get(
-          `http://localhost:3000/database/${db.name}/table/${target.name}/column/list`,
-          { headers: { token: server.token } }
-        )
-        .then(d => d.data);
-      let TB = $self.servers
-        .find(d => d.key === target.serverKey)
-        .children.find(d => d.key === target.dbKey)
-        .children.find(d => d.key === target.key);
-
-      TB.children = columns;
-      $self.local_data = { ...$self.local_data, ...$self.toObject(columns) };
+    async getColumns(target, key, table) {
+      const server = target.local_data[key];
+      ipcRenderer.send('server:getColumns', server.opts, {...table, ...{ children: undefined }}) //- don't update the pointer
     },
     constraintText(constraintType) {
       if (constraintType === "PRIMARY KEY") return "PK, ";
