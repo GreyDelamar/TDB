@@ -34,6 +34,9 @@
                 required
               ></v-text-field>
             </v-col>
+            <v-alert type="error" v-if="error">
+              Invalid Login
+            </v-alert>
           </v-row>
         </v-container>
       </v-card-text>
@@ -58,7 +61,8 @@ export default {
   data: () => ({
     server: "",
     username: "",
-    password: ""
+    password: "",
+    error: false,
   }),
 
   mounted () {
@@ -68,6 +72,8 @@ export default {
         this.$store.commit('connectionAdd', data.opts)
 
         this.dialogTemp = false
+      } else {
+        this.error = true
       }
     })
   },
@@ -91,7 +97,6 @@ export default {
         username: $self.username,
         password: $self.password
       };
-
       ipcRenderer.send('server:addConnection', data)
     }
   }
