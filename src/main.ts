@@ -33,7 +33,7 @@ function createWindow() {
   dbWin = new BrowserWindow({
     width: 1400,
     height: 900,
-    show: false,
+    show: isDevelopment,
     webPreferences: {
       nodeIntegration: isDevelopment,
       // contextIsolation: true
@@ -164,3 +164,11 @@ ipcMain.on('server:getTables:result', (e, result) => {
   if (win) win.webContents.send('server:getTables:result', result);
 })
 
+// get Columns
+ipcMain.on('server:getColumns', (e, config, table) => {
+  if (dbWin) dbWin.webContents.send('server:getColumns', config, table);
+})
+
+ipcMain.on('server:getColumns:result', (e, result) => {
+  if (win) win.webContents.send('server:getColumns:result', result);
+})

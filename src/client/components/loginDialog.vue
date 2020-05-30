@@ -62,7 +62,7 @@ export default {
     server: "",
     username: "",
     password: "",
-    error: false,
+    error: false
   }),
 
   mounted () {
@@ -70,6 +70,11 @@ export default {
       if (data.success && data.opts) {
         this.$store.commit('serverAdd', data.server)
         this.$store.commit('connectionAdd', data.opts)
+
+        this.server = ""
+        this.username = ""
+        this.password = ""
+        this.error = false
 
         this.dialogTemp = false
       } else {

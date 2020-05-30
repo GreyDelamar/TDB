@@ -34,7 +34,7 @@
       <!-- disconnect -->
       <v-tooltip v-if="item.guiType === 'server'" top>
         <template v-slot:activator="{ on }">
-          <v-btn @click="disconnect" v-on="on" text small>
+          <v-btn @click.stop="disconnect(item)" v-on="on" text small>
             <v-icon style="font-size: 16px;">fa-unlink</v-icon>
           </v-btn>
         </template>
@@ -163,8 +163,8 @@ export default {
       else if (constraintType === "FOREIGN KEY") return "FK, ";
       else return "";
     },
-    disconnect() {
-      console.log("disconnect");
+    disconnect(val) {
+      this.$store.commit('serverRemove', val.guiID)
     }
   },
 
