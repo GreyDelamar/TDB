@@ -9,7 +9,7 @@ connPro.addIPC('server:getDatabases', async (e: any, options: { [key: string]: a
     let results = await client.getDatabases()
     connPro.send('server:getDatabases:result', { serverGuiID: options.guiID, results })
   } catch (error) {
-    connPro.send('server:getDatabases:result', { error })
+    connPro.send('server:getDatabases:result', { serverGuiID: options.guiID, error })
   }
 })
 

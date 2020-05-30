@@ -58,7 +58,9 @@ export default class connectionProvider {
     opts = this.cleanOpts(opts)
 
     let sql = new sqlServer(opts, opts.guiID)
-    await sql.newConnection()
+    // test connection
+    const conn = await sql.newConnection()
+    await conn.close()
 
     this.connections[opts.guiID] = { config: opts, client: sql }
   }

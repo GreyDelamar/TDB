@@ -67,12 +67,12 @@ export default {
       if (data.results) {
         $self.local_data[data.serverGuiID].children = [...data.results]
       } else if (data.error) {
+        $self.columnCalled[data.serverGuiID] = undefined
         console.log(data.error)
       }
     })
 
     ipcRenderer.on('server:getTables:result', (e, data) => {
-
       if (data.results) {
        const server = $self.local_data[data.serverGuiID] || {}
        const children = server.children || []
@@ -80,6 +80,7 @@ export default {
 
        target.children = [...data.results]
       } else if (data.error) {
+        $self.columnCalled[data.databaseGuiID] = undefined
         console.log(data.error)
       }
     })
