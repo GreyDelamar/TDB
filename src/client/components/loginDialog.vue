@@ -42,7 +42,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn text @click="submit">Login</v-btn>
+        <v-btn v-bind:disabled="btnDisable" text @click="submit">Login</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -63,6 +63,7 @@ export default {
     username: "",
     password: "",
     error: false,
+    btnDisable: false,
   }),
 
   mounted () {
@@ -73,6 +74,8 @@ export default {
 
         this.dialogTemp = false
       } else {
+        // error connecting to DB
+        this.btnDisable = false
         this.error = true
       }
     })
@@ -91,6 +94,8 @@ export default {
 
   methods: {
     submit() {
+      this.btnDisable = true;
+      this.error = false;
       const $self = this;
       let data = {
         server: $self.server,
