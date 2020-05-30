@@ -82,10 +82,7 @@ export default {
     monaco.languages.registerDocumentFormattingEditProvider("sql", {
       async provideDocumentFormattingEdits(model) {
         const sqlFormatter = await import("sql-formatter");
-
         const text = sqlFormatter.format(model.getValue());
-
-        debugger;
 
         return [
           {
@@ -132,7 +129,6 @@ export default {
         ],
         contextMenuGroupId: "navigation",
         run() {
-          debugger;
           $self.editor.getAction("editor.action.formatDocument").run();
           return "";
         }

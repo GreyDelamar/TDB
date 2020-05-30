@@ -15,7 +15,8 @@ export default class sqlServer {
 
   public async newConnection (): Promise<ConnectionPool> {
     try {
-      const connConf = await new ConnectionPool(this.config)
+      let poolConfig = { min: 1, max: 2 }
+      const connConf = await new ConnectionPool({...poolConfig, ...this.config})
       const conn = await connConf.connect()
       const result = await conn.query`select 1 AS res`
 
@@ -23,10 +24,12 @@ export default class sqlServer {
         this.reconnectAttempts = 0
         return conn
       } else {
+        console.log('DB RECONN')
         this.reconnectAttempts = this.reconnectAttempts + 1
         return this.newConnection()
       }
     } catch (error) {
+      console.log('DB RECONN')
       if (this.reconnectAttempts >= 3) throw new Error(`Can't connect to the database...`)
       this.reconnectAttempts = this.reconnectAttempts + 1
       return this.newConnection()
@@ -70,12 +73,12 @@ export default class sqlServer {
     });
   }
 
-  public async getTables (databaseName: string) {
+  public async getTables (databaseName: string, databaseGuiID: string) {
     const conn = await this.newConnection()
 
     return conn.batch(`
       SET NOCOUNT ON
-      DECLARE @result table (dbName sysname, schemaName sysname, name sysname)
+      DECLARE @result table (databaseName sysname, schemaName sysname, name sysname)
       DECLARE
           @SearchDb nvarchar(200)
           ,@SearchSchema nvarchar(200)
@@ -86,11 +89,11 @@ export default class sqlServer {
       SET @SearchTable='%'
       SET @SQL='select ''?'' as dbName, s.name as schemaName, t.name as TableName from [?].sys.tables t inner join sys.schemas s on t.schema_id=s.schema_id WHERE ''?'' != "master" AND ''?'' != "msdb" AND ''?'' != "tempdb" AND ''?'' != "model" AND ''?'' LIKE '''+@SearchDb+''' AND s.name LIKE '''+@SearchSchema+''' AND t.name LIKE '''+@SearchTable+''''
 
-      INSERT INTO @result (dbName, schemaName, name)
+      INSERT INTO @result (databaseName, schemaName, name)
           EXEC sp_msforeachdb @SQL
       SET NOCOUNT OFF
 
-      SELECT *, NEWID() AS guiID FROM @result ORDER BY dbName, schemaName, name
+      SELECT *, NEWID() AS guiID FROM @result ORDER BY databaseName, schemaName, name
     `).then(async d => {
       let result = d.recordset
 
@@ -99,6 +102,62 @@ export default class sqlServer {
 
         el.guiType = 'table'
         el.children =  [{ "name":"Loading..." }]
+        el.serverGuiID = this.guiID
+        el.databaseGuiID = databaseGuiID
+      }
+
+      await conn.close()
+      return result
+    });
+  }
+
+  public async getColumns (databaseName: string, databaseGuiID: string, tableName: string, tableGuiID: string) {
+    const conn = await this.newConnection()
+
+    return conn.batch(`
+      USE [${databaseName}]
+
+      SELECT
+          OBJECT_SCHEMA_NAME (c.object_id) schemaName,
+          o.Name AS tableName,
+          con.CONSTRAINT_TYPE AS constraintType,
+          c.Name AS name,
+          c.is_nullable AS nullable,
+          t.Name AS dataType,
+          t.max_length AS lengthSize,
+          t.precision AS precision,
+          NEWID() AS guiID
+
+      FROM
+          sys.columns c
+      INNER JOIN
+          sys.objects o ON o.object_id = c.object_id
+      LEFT JOIN
+          sys.types t ON t.user_type_id = c.user_type_id
+      LEFT JOIN
+          INFORMATION_SCHEMA.KEY_COLUMN_USAGE i ON o.Name = i.TABLE_NAME
+                                                AND C.Name = i.COLUMN_NAME
+      LEFT JOIN
+          INFORMATION_SCHEMA.TABLE_CONSTRAINTS con ON i.CONSTRAINT_NAME = con.CONSTRAINT_NAME
+
+      WHERE
+          o.Type = 'U'
+      AND
+          o.Name = '${tableName}'
+
+      ORDER BY
+          con.CONSTRAINT_TYPE desc,
+          c.Name
+    `).then(async d => {
+      let result = d.recordset
+
+      for (let i = 0; i < result.length; i++) {
+        const el = result[i];
+
+        el.guiType = 'columns'
+        el.serverGuiID = this.guiID
+        el.databaseGuiID = databaseGuiID
+        el.tableGuiID = tableGuiID
       }
 
       await conn.close()
@@ -107,39 +166,3 @@ export default class sqlServer {
   }
 
 }
-
-
-// COLUMN QUERY
-// EXECUTE AS LOGIN = '${request.headers.username}'
-// USE [${params.dbID}]
-
-// SELECT
-//     OBJECT_SCHEMA_NAME (c.object_id) SchemaName,
-//     o.Name AS Table_Name,
-//     con.CONSTRAINT_TYPE AS constraintType,
-//     c.Name AS name,
-//     c.is_nullable AS nullable,
-//     t.Name AS dataType,
-//     t.max_length AS Length_Size,
-//     t.precision AS Precision
-
-// FROM
-//     sys.columns c
-// INNER JOIN
-//     sys.objects o ON o.object_id = c.object_id
-// LEFT JOIN
-//     sys.types t ON t.user_type_id = c.user_type_id
-// LEFT JOIN
-//     INFORMATION_SCHEMA.KEY_COLUMN_USAGE i ON o.Name = i.TABLE_NAME
-//                                           AND C.Name = i.COLUMN_NAME
-// LEFT JOIN
-//     INFORMATION_SCHEMA.TABLE_CONSTRAINTS con ON i.CONSTRAINT_NAME = con.CONSTRAINT_NAME
-
-// WHERE
-//     o.Type = 'U'
-// AND
-//     o.Name = '${params.tbID}'
-
-// ORDER BY
-//     con.CONSTRAINT_TYPE desc,
-//     c.Name
