@@ -32,10 +32,9 @@ export default class connectionProvider {
 
   private start () {
     this.addIPC('server:addConnection', async (e:any, opts:any) => {
-      await this.addConnection(opts)
-
+      let conn = await this.addConnection(opts)
       ipcRenderer.send('server:addConnection:result', {
-        success: true,
+        success: conn.success,
         opts: {...opts, ...{ password: undefined }},
         server: { name: `${opts.server} - ${opts.username}`, guiID: opts.guiID, guiType: 'server', children: [ {name: "Loading..."} ], opts }
       })
@@ -60,10 +59,15 @@ export default class connectionProvider {
     let sql = new sqlServer(opts, opts.guiID)
 
     // test connection
-    const conn = await sql.newConnection()
-    await conn.close()
+    try{
+      let conn = await sql.newConnection()
+      this.connections[opts.guiID] = { config: opts, client: sql }
+      await conn.close()
+      return {success: true, message: "success"}
+    } catch (err) {
+      return {success: false, message: "fail"}
+    }
 
-    this.connections[opts.guiID] = { config: opts, client: sql }
   }
 
   public async getConnection (opts: connectionConfig) {
