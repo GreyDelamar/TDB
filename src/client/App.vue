@@ -19,7 +19,22 @@
 
     <!-- Sizes your content based upon application components -->
     <v-content class="pt-0" id="main_content">
-      <MonacoEditor class="pa-1" :width="editorWidth"></MonacoEditor>
+      <v-tabs v-if="openEditiors.length" v-model="viewingEditior" show-arrows>
+        <v-tabs-slider></v-tabs-slider>
+        <v-tab v-for="oE in openEditiors" :key="oE.id">
+          {{ oE.name }}
+        </v-tab>
+      </v-tabs>
+
+      <v-tabs-items v-model="viewingEditior">
+        <v-tab-item
+          v-for="item in openEditiors"
+          :key="item.id"
+        >
+          <MonacoEditor class="pa-1" :width="editorWidth"></MonacoEditor>
+        </v-tab-item>
+      </v-tabs-items>
+
     </v-content>
 
     <!-- <v-footer app> -->
@@ -63,12 +78,16 @@ export default class App extends Vue {
   $refs!: {
     drawer: Vue
   }
+  openEditiors: Array<{ [key: string]: any}>
+  viewingEditior: any
 
   constructor() {
     super();
     this.navigation = { width: 350, borderSize: 5 }
     this.menuSearchVal = ""
     this.editorWidth = window.innerWidth - this.navigation.width
+    this.openEditiors = []
+    this.viewingEditior = null
   }
 
   beforeMount () {
@@ -95,6 +114,9 @@ export default class App extends Vue {
         });
 
         ro.observe(<Element>document.getElementById("main_content"));
+
+        this.$store.commit('monacoEditorCount')
+        this.openEditiors.push({ id: this.$store.state.monacoEditorCount, name: `SQL ${this.$store.state.monacoEditorCount}` })
     })
   };
 
@@ -169,5 +191,9 @@ export default class App extends Vue {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+
+  .v-window {
+    height: 100%;
+  }
 }
 </style>
