@@ -35,6 +35,11 @@ export default new Vuex.Store({
     serverRemove(context, val) {
       context.servers = context.servers.filter(d => d.guiID !== val);
       window.localStorage.setItem("servers", JSON.stringify(context.servers));
+      context.connections = context.connections.filter(d => d.guiID !== val);
+      window.localStorage.setItem("connections", JSON.stringify(context.connections));
+      if (!context.connections.length) {
+        context.showLogin = true
+      }
     },
     serverReplace(context, val) {
       try {
@@ -56,10 +61,6 @@ export default new Vuex.Store({
     },
     connectionAdd(context, val) {
       context.connections.push(val);
-      window.localStorage.setItem("connections", JSON.stringify(context.connections));
-    },
-    connectionRemove(context, val) {
-      context.connections = context.connections.filter(d => d.guiID !== val);
       window.localStorage.setItem("connections", JSON.stringify(context.connections));
     },
     monacoEditorCount(context) {

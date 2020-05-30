@@ -72,6 +72,11 @@ export default {
         this.$store.commit('serverAdd', data.server)
         this.$store.commit('connectionAdd', data.opts)
 
+        this.server = ""
+        this.username = ""
+        this.password = ""
+        this.error = false
+
         this.dialogTemp = false
       } else {
         // error connecting to DB
