@@ -89,4 +89,12 @@ export default class connectionProvider {
   public send (channel: string, ...args: any[]) {
     ipcRenderer.send(channel, ...args)
   }
+
+  public async close() {
+    for (const pool of Object.values(this.connections)) {
+      await pool.client.close()
+    }
+
+    return true
+  }
 }

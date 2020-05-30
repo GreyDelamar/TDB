@@ -21,6 +21,10 @@ export default class sqlServer {
     return this.pool.request();
   }
 
+  public close() {
+    return this.pool.close()
+  }
+
   public async getDatabases () {
     const conn = await this.newConnection()
 

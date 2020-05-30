@@ -18,7 +18,7 @@
     </v-navigation-drawer>
 
     <!-- Sizes your content based upon application components -->
-    <v-content class="pt-0" id="main_content">
+    <v-content class="pt-0" >
       <v-tabs v-if="openEditiors.length" v-model="viewingEditior" show-arrows>
         <v-tabs-slider></v-tabs-slider>
         <v-tab v-for="oE in openEditiors" :key="oE.id">
@@ -26,12 +26,9 @@
         </v-tab>
       </v-tabs>
 
-      <v-tabs-items v-model="viewingEditior">
-        <v-tab-item
-          v-for="item in openEditiors"
-          :key="item.id"
-        >
-          <MonacoEditor class="pa-1" :width="editorWidth"></MonacoEditor>
+      <v-tabs-items v-model="viewingEditior" id="main_content">
+        <v-tab-item v-for="item in openEditiors" :key="item.id">
+          <MonacoEditor class="pa-1" :width="editorWidth" :height="editorHeight"></MonacoEditor>
         </v-tab-item>
       </v-tabs-items>
 
@@ -74,7 +71,8 @@ import MonacoEditor from "@/components/monacoEditor.vue";
 export default class App extends Vue {
   navigation: { width: number, borderSize: number }
   menuSearchVal: string
-  editorWidth: number | boolean
+  editorWidth: number
+  editorHeight: number
   $refs!: {
     drawer: Vue
   }
@@ -86,6 +84,7 @@ export default class App extends Vue {
     this.navigation = { width: 350, borderSize: 5 }
     this.menuSearchVal = ""
     this.editorWidth = window.innerWidth - this.navigation.width
+    this.editorHeight = 50
     this.openEditiors = []
     this.viewingEditior = null
   }
@@ -110,6 +109,7 @@ export default class App extends Vue {
             for (const entry of entries) {
                 const {left, top, width, height} = entry.contentRect;
                 this.editorWidth = width
+                this.editorHeight = height
             }
         });
 
@@ -193,7 +193,11 @@ export default class App extends Vue {
   margin-top: 60px;
 
   .v-window {
-    height: 100%;
+    height: calc(100% - 48px);
+  }
+
+  .v-application--wrap {
+    min-height: calc(100vh - 60px);
   }
 }
 </style>

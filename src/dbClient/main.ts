@@ -1,48 +1,50 @@
 import connectionProvider, { connectionConfig } from '@db/connection-provider'
 
-window.addEventListener('load', function () {
-  console.log('Starting Database Connection Provider')
-  const connPro = new connectionProvider()
+console.log('Starting Database Connection Provider')
+const connPro = new connectionProvider()
 
-  connPro.addIPC('server:getDatabases', async (e: any, options: { [key: string]: any}) => {
-    try {
-      const client = await connPro.getConnection(<connectionConfig>options)
-      let results = await client.getDatabases()
-      connPro.send('server:getDatabases:result', { serverGuiID: options.guiID, results })
-    } catch (error) {
-      connPro.send('server:getDatabases:result', { serverGuiID: options.guiID, error })
-    }
-  })
-
-  connPro.addIPC('server:getTables', async (e: any, options: { [key: string]: any}, databaseName: string, databaseGuiID: string) => {
-    try {
-      const client = await connPro.getConnection(<connectionConfig>options)
-      let results = await client.getTables(databaseName, databaseGuiID)
-      connPro.send('server:getTables:result', { serverGuiID: options.guiID, databaseGuiID, results })
-    } catch (error) {
-      connPro.send('server:getTables:result', { serverGuiID: options.guiID, databaseGuiID, error })
-    }
-  })
-
-
-  connPro.addIPC('server:getColumns', async (e: any, options: { [key: string]: any}, table: { [key: string]: any}) => {
-    try {
-      const client = await connPro.getConnection(<connectionConfig>options)
-      let results = await client.getColumns(table.databaseName, table.databaseGuiID, table.name, table.guiID)
-
-      connPro.send('server:getColumns:result', {
-        serverGuiID: options.guiID,
-        databaseGuiID: table.databaseGuiID,
-        tableGuiID: table.guiID,
-        results
-      })
-    } catch (error) {
-      connPro.send('server:getColumns:result', {
-        serverGuiID: options.guiID,
-        databaseGuiID: table.databaseGuiID,
-        tableGuiID: table.guiID,
-        error
-      })
-    }
-  })
+connPro.addIPC('server:getDatabases', async (e: any, options: { [key: string]: any}) => {
+  try {
+    const client = await connPro.getConnection(<connectionConfig>options)
+    let results = await client.getDatabases()
+    connPro.send('server:getDatabases:result', { serverGuiID: options.guiID, results })
+  } catch (error) {
+    connPro.send('server:getDatabases:result', { serverGuiID: options.guiID, error })
+  }
 })
+
+connPro.addIPC('server:getTables', async (e: any, options: { [key: string]: any}, databaseName: string, databaseGuiID: string) => {
+  try {
+    const client = await connPro.getConnection(<connectionConfig>options)
+    let results = await client.getTables(databaseName, databaseGuiID)
+    connPro.send('server:getTables:result', { serverGuiID: options.guiID, databaseGuiID, results })
+  } catch (error) {
+    connPro.send('server:getTables:result', { serverGuiID: options.guiID, databaseGuiID, error })
+  }
+})
+
+connPro.addIPC('server:getColumns', async (e: any, options: { [key: string]: any}, table: { [key: string]: any}) => {
+  try {
+    const client = await connPro.getConnection(<connectionConfig>options)
+    let results = await client.getColumns(table.databaseName, table.databaseGuiID, table.name, table.guiID)
+
+    connPro.send('server:getColumns:result', {
+      serverGuiID: options.guiID,
+      databaseGuiID: table.databaseGuiID,
+      tableGuiID: table.guiID,
+      results
+    })
+  } catch (error) {
+    connPro.send('server:getColumns:result', {
+      serverGuiID: options.guiID,
+      databaseGuiID: table.databaseGuiID,
+      tableGuiID: table.guiID,
+      error
+    })
+  }
+})
+
+// Hope this will kill the DB on dev hot reloads
+window.addEventListener('beforeunload', async () => {
+ await connPro.close()
+});
