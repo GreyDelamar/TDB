@@ -8,6 +8,7 @@
     open-on-click
     :search="searchTerm"
     :filter="mainfilter"
+    return-object
   >
     <template v-slot:prepend="{ item }">
       <v-icon>
@@ -64,7 +65,22 @@ export default {
 
     ipcRenderer.on('server:getDatabases:result', (e, data) => {
       if (data.results) {
-        $self.local_data[data.guiID].children = [...data.results]
+        $self.local_data[data.serverGuiID].children = [...data.results]
+      } else if (data.error) {
+        console.log(data.error)
+      }
+    })
+
+    ipcRenderer.on('server:getTables:result', (e, data) => {
+
+      if (data.results) {
+       const server = $self.local_data[data.serverGuiID] || {}
+       const children = server.children || []
+       const target = children.find(d => d.guiID === data.databaseGuiID) || {}
+
+       target.children = [...data.results]
+      } else if (data.error) {
+        console.log(data.error)
       }
     })
   },
@@ -85,20 +101,22 @@ export default {
       const $self = this;
 
       if (d.length > 0) {
-        debugger
         for (let i = 0; i < d.length; i++) {
-          const key = d[i];
+          const el = d[i];
+          const guiID = el.guiID;
+          const serverGuiID = el.serverGuiID;
+          const type = el.guiType;
 
-          if (!$self.columnCalled[key]) {
-            $self.columnCalled[key] = true;
-            let type = $self.local_data[key].guiType;
+          if (!$self.columnCalled[guiID]) {
+            $self.columnCalled[guiID] = true;
 
+            let key = serverGuiID || guiID;
             switch (type) {
               case "server":
                 $self.getDatabases(key);
                 break;
               case "database":
-                $self.getTables(key);
+                $self.getTables(key, el.name, guiID);
                 break;
               case "table":
                 $self.getColumns(key);
@@ -109,29 +127,12 @@ export default {
       }
     },
     async getDatabases(key) {
-      const $self = this;
-      const server = $self.local_data[key];
+      const server = this.local_data[key];
       ipcRenderer.send('server:getDatabases', server.opts)
     },
-    async getTables(key) {
-      const $self = this;
-      const db = $self.local_data[key];
-      const server = $self.local_data[db.serverKey];
-
-      let tables = await $self.$http
-        .get(`http://localhost:3000/database/${key}/table/list`, {
-          headers: { token: server.token }
-        })
-        .then(d => d.data);
-      let DB = $self.servers
-        .find(d => d.key === db.serverKey)
-        .children.find(d => d.key === key);
-      tables.map(d => {
-        d.dbKey = key;
-        d.serverKey = db.serverKey;
-      });
-      DB.children = tables;
-      $self.local_data = { ...$self.local_data, ...$self.toObject(tables) };
+    async getTables(key, databaseName, databaseGuiID) {
+      const server = this.local_data[key];
+      ipcRenderer.send('server:getTables', server.opts, databaseName, databaseGuiID)
     },
     async getColumns(tableName) {
       const $self = this;
