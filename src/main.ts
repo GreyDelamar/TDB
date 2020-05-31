@@ -145,6 +145,10 @@ ipcMain.on('server:addConnection:result', (e, result: any) => {
   if (win) win.webContents.send('server:addConnection:result', result);
 })
 
+//  remove connection
+ipcMain.on('server:removeConnection', (e, config: any) => {
+  if (dbWin) dbWin.webContents.send('server:removeConnection', config);
+})
 
 // get databases
 ipcMain.on('server:getDatabases', (e, config) => {

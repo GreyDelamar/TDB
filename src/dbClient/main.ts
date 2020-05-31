@@ -3,9 +3,9 @@ import connectionProvider, { connectionConfig } from '@db/connection-provider'
 console.log('Starting Database Connection Provider')
 const connPro = new connectionProvider()
 
-connPro.addIPC('server:getDatabases', async (e: any, options: { [key: string]: any}) => {
+connPro.addIPC('server:getDatabases', async (e: any, options: connectionConfig) => {
   try {
-    const client = await connPro.getConnection(<connectionConfig>options)
+    const client = await connPro.getConnection(options)
     let results = await client.getDatabases()
     connPro.send('server:getDatabases:result', { serverGuiID: options.guiID, results })
   } catch (error) {
@@ -13,9 +13,9 @@ connPro.addIPC('server:getDatabases', async (e: any, options: { [key: string]: a
   }
 })
 
-connPro.addIPC('server:getTables', async (e: any, options: { [key: string]: any}, databaseName: string, databaseGuiID: string) => {
+connPro.addIPC('server:getTables', async (e: any, options: connectionConfig, databaseName: string, databaseGuiID: string) => {
   try {
-    const client = await connPro.getConnection(<connectionConfig>options)
+    const client = await connPro.getConnection(options)
     let results = await client.getTables(databaseName, databaseGuiID)
     connPro.send('server:getTables:result', { serverGuiID: options.guiID, databaseGuiID, results })
   } catch (error) {
@@ -23,9 +23,9 @@ connPro.addIPC('server:getTables', async (e: any, options: { [key: string]: any}
   }
 })
 
-connPro.addIPC('server:getColumns', async (e: any, options: { [key: string]: any}, table: { [key: string]: any}) => {
+connPro.addIPC('server:getColumns', async (e: any, options: connectionConfig, table: { [key: string]: any}) => {
   try {
-    const client = await connPro.getConnection(<connectionConfig>options)
+    const client = await connPro.getConnection(options)
     let results = await client.getColumns(table.databaseName, table.databaseGuiID, table.name, table.guiID)
 
     connPro.send('server:getColumns:result', {
@@ -41,6 +41,15 @@ connPro.addIPC('server:getColumns', async (e: any, options: { [key: string]: any
       tableGuiID: table.guiID,
       error
     })
+  }
+})
+
+connPro.addIPC('server:removeConnection', async (e: any, options: connectionConfig) => {
+  try {
+    const client = await connPro.getConnection(options)
+    await client.close()
+  } catch (error) {
+    console.log(error)
   }
 })
 
