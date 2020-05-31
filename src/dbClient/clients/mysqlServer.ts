@@ -1,4 +1,5 @@
 import mysql from 'mysql'
+import { v4 } from 'uuid';
 import { connectionConfig } from '@db/connection-provider'
 
 export default class mysqlServer {
@@ -19,6 +20,10 @@ export default class mysqlServer {
         })
     }
 
+    private generateUUID() {
+      return v4()
+    }
+
     public newConnection(): Promise<mysql.PoolConnection> {
 
         return new Promise((resolve, reject) => {
@@ -36,7 +41,62 @@ export default class mysqlServer {
         // return this.connection.end();
     }
 
-    public async getDatabases() {}
-    public async getTables(databaseName: string, databaseGuiID: string) {}
+    public async getDatabases() {
+        const conn = await this.newConnection()
+
+        return new Promise((resolve, reject) => {
+            conn.query("SHOW DATABASES;", async (err, results) => {
+                if (err) reject(err)
+
+                let returnResults = []
+                for(var index in results) {
+                    const dbRow = results[index];
+            
+                    returnResults.push({
+                        name: dbRow.Database,
+                        guiID: this.generateUUID(),
+                        guiType: 'database',
+                        serverGuiID: this.guiID,
+                        children:[{ "name": "Loading..." }]
+                    })
+                }
+
+                resolve(returnResults)
+            })
+        })
+    }
+    public async getTables(databaseName: string, databaseGuiID: string) {
+        const conn = await this.newConnection()
+
+        const query = `
+          SELECT
+            TABLE_NAME AS _table_name
+          FROM
+            INFORMATION_SCHEMA.TABLES
+          WHERE
+            TABLE_SCHEMA = '${databaseName}'
+        `
+        return new Promise((resolve, reject) => {         
+          conn.query(query, async (err, results) => {
+                if (err) reject(err)
+
+                let returnResults = []
+                for (var index in results) {
+                    const dbRow = results[index];
+
+                    returnResults.push({
+                        name: dbRow._table_name,
+                        guiID: this.generateUUID(),
+                        guiType: 'table',
+                        serverGuiID: this.guiID,
+                        databaseGuiID: databaseGuiID,
+                        children: [{ "name": "Loading..." }],
+                    })
+                }
+
+                resolve(returnResults)
+            })
+        })
+    }
     public async getColumns(databaseName: string, databaseGuiID: string, tableName: string, tableGuiID: string) {}
 }

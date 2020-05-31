@@ -62,6 +62,7 @@ export default class connectionProvider {
     opts = this.cleanOpts(opts)
 
     // @TODO these two if's should be a switch statement
+    // Handle MS SQL Connection Type
     if(opts.serverType == 'mssql') {
       let sql = new sqlServer(opts, opts.guiID)
 
@@ -75,6 +76,7 @@ export default class connectionProvider {
       }
     }
 
+    // Handle MySQL Connection Type
     if (opts.serverType == 'mysql') {
       let mysql = new mysqlServer(opts, opts.guiID)
 
@@ -86,12 +88,11 @@ export default class connectionProvider {
         return { success: false, message: "fail" }
       }
 
-      console.info(connection)
       if (connection.state !== 'authenticated') {
         return { success: false, message: "fail" }
       }
 
-      this.connections[opts.guiID] = { config: opts, client: connection }
+      this.connections[opts.guiID] = { config: opts, client: mysql }
       return { success: true, message: "success" }
     }
 
