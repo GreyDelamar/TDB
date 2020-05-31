@@ -164,7 +164,7 @@ export default {
       else return "";
     },
     disconnect(val) {
-      ipcRenderer.send('server:removeConnection', server.opts)
+      ipcRenderer.send('server:removeConnection', val)
       this.$store.commit('serverRemove', val.guiID)
     }
   },

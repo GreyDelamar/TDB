@@ -81,6 +81,10 @@ export default class connectionProvider {
     return connection.client
   }
 
+  public checkForConnection(guiID: string) {
+    return this.connections[guiID]
+  }
+
   public addIPC (channel: string, listener: (event: IpcRendererEvent, ...args: any[] )=>void) {
     ipcRenderer.on(channel, listener)
     return true

@@ -46,7 +46,7 @@ connPro.addIPC('server:getColumns', async (e: any, options: connectionConfig, ta
 
 connPro.addIPC('server:removeConnection', async (e: any, options: connectionConfig) => {
   try {
-    const client = await connPro.getConnection(options)
+    const client = await connPro.checkForConnection(options.guiID)
     await client.close()
   } catch (error) {
     console.log(error)
