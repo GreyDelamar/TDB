@@ -25,7 +25,6 @@ export default class mysqlServer {
     }
 
     public newConnection(): Promise<mysql.PoolConnection> {
-
         return new Promise((resolve, reject) => {
             this.pool.getConnection((err, connection) => {
                 if (err) {
@@ -62,6 +61,7 @@ export default class mysqlServer {
                 }
 
                 resolve(returnResults)
+                conn.destroy()
             })
         })
     }
@@ -89,14 +89,46 @@ export default class mysqlServer {
                         guiID: this.generateUUID(),
                         guiType: 'table',
                         serverGuiID: this.guiID,
+                        databaseName: databaseName,
                         databaseGuiID: databaseGuiID,
                         children: [{ "name": "Loading..." }],
                     })
                 }
 
                 resolve(returnResults)
+                conn.destroy()
             })
         })
     }
-    public async getColumns(databaseName: string, databaseGuiID: string, tableName: string, tableGuiID: string) {}
+    public async getColumns(databaseName: string, databaseGuiID: string, tableName: string, tableGuiID: string) {
+      const conn = await this.newConnection()
+
+      const query = `
+        SHOW COLUMNS FROM ${databaseName}.${tableName};
+      `
+      return new Promise((resolve, reject) => {
+        conn.query(query, async (err, results) => {
+          if (err) reject(err)
+
+          let returnResults = []
+          for (var index in results) {
+            const dbRow = results[index];
+
+            returnResults.push({
+              name: dbRow.Field,
+              dataType: dbRow.Type,
+              nullable: dbRow.Null,
+              constraintType: dbRow.Key,
+              guiID: this.generateUUID(),
+              guiType: 'columns',
+              serverGuiID: this.guiID,
+              databaseGuiID: databaseGuiID
+            })
+          }
+
+          resolve(returnResults)
+          conn.destroy()
+        })
+      })
+    }
 }
