@@ -7,7 +7,6 @@ import {
 } from "vue-cli-plugin-electron-builder/lib";
 import { config } from '@vue/test-utils';
 const isDevelopment = process.env.NODE_ENV !== "production";
-// import dbWorker from './dbWorker'
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -25,7 +24,7 @@ function createWindow() {
     width: 1400,
     height: 900,
     webPreferences: {
-      nodeIntegration: isDevelopment,
+      nodeIntegration: true,
       // contextIsolation: true
     }
   });
@@ -33,12 +32,12 @@ function createWindow() {
   dbWin = new BrowserWindow({
     width: 1400,
     height: 900,
-    show: isDevelopment,
+    show: false,
     webPreferences: {
-      nodeIntegration: isDevelopment,
+      nodeIntegration: true,
       // contextIsolation: true
     }
-  });
+  });``
 
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -134,11 +133,17 @@ if (isDevelopment) {
 }
 
 
+ipcMain.on('log:main', (e, val: any) => {
+  console.log(val)
+})
+
+
 // --- ROUTER SECTION ---
 
 //  add connection
 ipcMain.on('server:addConnection', (e, config: any) => {
   if (dbWin) dbWin.webContents.send('server:addConnection', config);
+  else console.log('WHAT')
 })
 
 ipcMain.on('server:addConnection:result', (e, result: any) => {
@@ -148,11 +153,13 @@ ipcMain.on('server:addConnection:result', (e, result: any) => {
 //  remove connection
 ipcMain.on('server:removeConnection', (e, config: any) => {
   if (dbWin) dbWin.webContents.send('server:removeConnection', config);
+  else console.log('WHAT')
 })
 
 // get databases
 ipcMain.on('server:getDatabases', (e, config) => {
   if (dbWin) dbWin.webContents.send('server:getDatabases', config);
+  else console.log('WHAT')
 })
 
 ipcMain.on('server:getDatabases:result', (e, result) => {
@@ -162,6 +169,7 @@ ipcMain.on('server:getDatabases:result', (e, result) => {
 // get tables
 ipcMain.on('server:getTables', (e, config, databaseName, databaseGuiID) => {
   if (dbWin) dbWin.webContents.send('server:getTables', config, databaseName, databaseGuiID);
+  else console.log('WHAT')
 })
 
 ipcMain.on('server:getTables:result', (e, result) => {
