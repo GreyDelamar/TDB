@@ -132,10 +132,11 @@ if (isDevelopment) {
   }
 }
 
-
-ipcMain.on('log:main', (e, val: any) => {
-  console.log(val)
-})
+if (isDevelopment) {
+  ipcMain.on('log:main', (e, val: any) => {
+    console.log(val)
+  })
+}
 
 
 // --- ROUTER SECTION ---
