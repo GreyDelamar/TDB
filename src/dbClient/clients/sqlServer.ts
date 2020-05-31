@@ -1,39 +1,28 @@
-import { ConnectionPool, config, IRecordSet } from 'mssql';
+import * as sql from 'mssql';
 import { connectionConfig } from '@db/connection-provider'
 
 export default class sqlServer {
-  public config: config
-  private connection: ConnectionPool | undefined
+  public config: sql.config
+  private pool: sql.ConnectionPool
   public guiID: string
-  private reconnectAttempts: number
 
   constructor (config: connectionConfig, guiID: string) {
-    this.config = <config>config
+    this.config = <sql.config>config
     this.guiID = guiID
-    this.reconnectAttempts = 0
+    this.pool = new sql.ConnectionPool(this.config);
+    this.pool.on('error', err => {
+      console.log('getting db error: ')
+      console.log(err)
+    })
   }
 
-  public async newConnection (): Promise<ConnectionPool> {
-    try {
-      let poolConfig = { min: 1, max: 2 }
-      const connConf = await new ConnectionPool({...poolConfig, ...this.config})
-      const conn = await connConf.connect()
-      const result = await conn.query`select 1 AS res`
+  public async newConnection (): Promise<sql.Request> {
+    await this.pool.connect()
+    return this.pool.request();
+  }
 
-      if (result.recordset[0].res === 1) {
-        this.reconnectAttempts = 0
-        return conn
-      } else {
-        console.log('DB RECONN')
-        this.reconnectAttempts = this.reconnectAttempts + 1
-        return this.newConnection()
-      }
-    } catch (error) {
-      console.log('DB RECONN')
-      if (this.reconnectAttempts >= 3) throw new Error(`Can't connect to the database...`)
-      this.reconnectAttempts = this.reconnectAttempts + 1
-      return this.newConnection()
-    }
+  public close() {
+    return this.pool.close()
   }
 
   public async getDatabases () {
@@ -68,7 +57,6 @@ export default class sqlServer {
         el.serverGuiID = this.guiID
       }
 
-      await conn.close()
       return result
     });
   }
@@ -106,7 +94,6 @@ export default class sqlServer {
         el.databaseGuiID = databaseGuiID
       }
 
-      await conn.close()
       return result
     });
   }
@@ -160,7 +147,6 @@ export default class sqlServer {
         el.tableGuiID = tableGuiID
       }
 
-      await conn.close()
       return result
     });
   }
