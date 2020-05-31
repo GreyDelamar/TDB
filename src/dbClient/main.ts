@@ -1,6 +1,7 @@
 import connectionProvider, { connectionConfig } from '@db/connection-provider'
+import { ipcRenderer } from 'electron';
 
-console.log('Starting Database Connection Provider')
+ipcRenderer.send('log:main', 'Starting Database Connection Provider')
 const connPro = new connectionProvider()
 
 connPro.addIPC('server:getDatabases', async (e: any, options: connectionConfig) => {
@@ -57,5 +58,5 @@ connPro.addIPC('server:removeConnection', async (e: any, options: connectionConf
 
 // Hope this will kill the DB on dev hot reloads
 window.addEventListener('beforeunload', async () => {
- await connPro.close()
+  await connPro.close()
 });

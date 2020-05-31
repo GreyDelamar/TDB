@@ -24,6 +24,9 @@ module.exports = {
     }
   },
   configureWebpack: {
+    node: {
+      dns: 'mock'
+    },
     module: {
       rules: [
         {

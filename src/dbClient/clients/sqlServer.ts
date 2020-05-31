@@ -4,6 +4,7 @@ import { connectionConfig } from '@db/connection-provider'
 export default class sqlServer {
   public config: sql.config
   private pool: sql.ConnectionPool
+  private poolConnect: Promise<sql.ConnectionPool>
   public guiID: string
 
   constructor (config: connectionConfig, guiID: string) {
@@ -14,10 +15,11 @@ export default class sqlServer {
       console.log('getting db error: ')
       console.log(err)
     })
+    this.poolConnect = this.pool.connect()
   }
 
   public async newConnection (): Promise<sql.Request> {
-    await this.pool.connect()
+    await this.poolConnect
     return this.pool.request();
   }
 
