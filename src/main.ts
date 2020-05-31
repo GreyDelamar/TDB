@@ -7,7 +7,6 @@ import {
 } from "vue-cli-plugin-electron-builder/lib";
 import { config } from '@vue/test-utils';
 const isDevelopment = process.env.NODE_ENV !== "production";
-// import dbWorker from './dbWorker'
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -25,7 +24,7 @@ function createWindow() {
     width: 1400,
     height: 900,
     webPreferences: {
-      nodeIntegration: isDevelopment,
+      nodeIntegration: true,
       // contextIsolation: true
     }
   });
@@ -33,12 +32,12 @@ function createWindow() {
   dbWin = new BrowserWindow({
     width: 1400,
     height: 900,
-    show: isDevelopment,
+    show: false,
     webPreferences: {
-      nodeIntegration: isDevelopment,
+      nodeIntegration: true,
       // contextIsolation: true
     }
-  });
+  });``
 
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
@@ -131,6 +130,12 @@ if (isDevelopment) {
       app.quit();
     });
   }
+}
+
+if (isDevelopment) {
+  ipcMain.on('log:main', (e, val: any) => {
+    console.log(val)
+  })
 }
 
 
