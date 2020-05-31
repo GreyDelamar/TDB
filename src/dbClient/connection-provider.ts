@@ -77,10 +77,18 @@ export default class connectionProvider {
 
     if (opts.serverType == 'mysql') {
       let mysql = new mysqlServer(opts, opts.guiID)
-      let connection = mysql.newConnection()
 
-      if (connection.state !== 'connected') {
-        // return { success: false, message: "fail" }
+      let connection
+      try {
+        connection = await mysql.newConnection()
+      } catch (err) {
+        console.error(err)
+        return { success: false, message: "fail" }
+      }
+
+      console.info(connection)
+      if (connection.state !== 'authenticated') {
+        return { success: false, message: "fail" }
       }
 
       this.connections[opts.guiID] = { config: opts, client: connection }

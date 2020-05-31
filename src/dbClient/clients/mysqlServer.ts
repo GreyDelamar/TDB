@@ -2,31 +2,34 @@ import mysql from 'mysql'
 import { connectionConfig } from '@db/connection-provider'
 
 export default class mysqlServer {
-    public config: connectionConfig
-    private connection: mysql.Connection
+    private pool: mysql.Pool
     public guiID: string
+    public config: connectionConfig
 
     constructor(config: connectionConfig, guiID: string) {
         this.guiID = guiID
         this.config = config
 
-        this.connection = mysql.createConnection({
+        this.pool = mysql.createPool({
+            connectionLimit: 10,
             host: this.config.server,
             user: this.config.username,
             password: this.config.password,
             // database: 'my_db'
-        });
+        })
     }
 
-    public newConnection(): mysql.Connection {
-        this.connection.connect();
+    public newConnection(): Promise<mysql.PoolConnection> {
 
-        /*this.connection.query('SELECT 1 + 1 AS solution', function (error, results, fields) {
-            if (error) throw error;
-            console.log('The solution is: ', results[0].solution);
-        });*/
-        
-        return this.connection
+        return new Promise((resolve, reject) => {
+            this.pool.getConnection((err, connection) => {
+                if (err) {
+                    return reject(err)
+                }
+
+                resolve(connection)
+            })
+        })
     }
 
     public close() {
