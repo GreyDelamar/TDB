@@ -4,7 +4,11 @@
 
     <!-- <v-system-bar></v-system-bar> -->
 
-    <v-app-bar app clipped-left> </v-app-bar>
+    <v-app-bar app clipped-left>
+      <!-- spacer to match nav drawer - v-app-bar padding -->
+      <div :style="`width: calc(${navigation.width}px - 16px)`"></div>
+      <btnIconStack text="Run SQL" icon="fa-play" @clicked="runSQL"/>
+    </v-app-bar>
 
     <v-navigation-drawer
       app
@@ -18,17 +22,20 @@
     </v-navigation-drawer>
 
     <!-- Sizes your content based upon application components -->
-    <v-content class="pt-0" >
+    <v-content class="pt-0 edit-tabs">
       <v-tabs v-if="openEditiors.length" v-model="viewingEditior" show-arrows>
         <v-tabs-slider></v-tabs-slider>
-        <v-tab v-for="oE in openEditiors" :key="oE.id">
-          {{ oE.name }}
+        <v-tab v-for="oE in openEditiors" :key="oE.id" class="d-flex flex-column pl-2 pr-2">
+          <div>{{ oE.name }}</div>
+          <small>
+            <div>{{oE.connName}}</div>
+          </small>
         </v-tab>
       </v-tabs>
 
       <v-tabs-items v-model="viewingEditior" id="main_content">
-        <v-tab-item v-for="item in openEditiors" :key="item.id">
-          <MonacoEditor class="pa-1" :width="editorWidth" :height="editorHeight"></MonacoEditor>
+        <v-tab-item v-for="oE in openEditiors" :key="'tab-'+oE.id">
+          <MonacoEditor :ref="'tab-'+oE.id+'-editor'" class="pa-1" :width="editorWidth" :height="editorHeight"></MonacoEditor>
         </v-tab-item>
       </v-tabs-items>
 
@@ -40,24 +47,25 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
-import { mapState } from "vuex";
+import { Component, Vue, Watch } from "vue-property-decorator";
 import ResizeObserver from 'resize-observer-polyfill';
+import { ipcRenderer } from 'electron';
 
 import loginDialog from "@/components/loginDialog.vue";
 import MenuSearch from "@/components/menuSearch.vue";
 import MenuTree from "@/components/menuTree.vue";
 import MonacoEditor from "@/components/monacoEditor.vue";
+import btnIconStack from "@/components/btnIconStack.vue";
 
 @Component({
   components: {
     loginDialog,
     MenuTree,
     MenuSearch,
-    MonacoEditor
+    MonacoEditor,
+    btnIconStack
   },
   computed: {
-    ...mapState(["servers"]),
     showLogin: {
       get () {
         return this.$store.state.showLogin
@@ -73,9 +81,8 @@ export default class App extends Vue {
   menuSearchVal: string
   editorWidth: number
   editorHeight: number
-  $refs!: {
-    drawer: Vue
-  }
+  $refs!: { [key: string]: any}
+  seenConnections: Array<{ [key: string]: any}>
   openEditiors: Array<{ [key: string]: any}>
   viewingEditior: any
 
@@ -87,6 +94,11 @@ export default class App extends Vue {
     this.editorHeight = 50
     this.openEditiors = []
     this.viewingEditior = null
+    this.seenConnections = []
+  }
+
+  get servers () {
+    return this.$store.state.servers
   }
 
   beforeMount () {
@@ -114,17 +126,12 @@ export default class App extends Vue {
         });
 
         ro.observe(<Element>document.getElementById("main_content"));
-
-        this.$store.commit('monacoEditorCount')
-        this.openEditiors.push({ id: this.$store.state.monacoEditorCount, name: `SQL ${this.$store.state.monacoEditorCount}` })
     })
   };
 
-
   setBorderWidth() {
-    let target = this.$refs.drawer.$el.querySelector<HTMLElement>(
-      ".v-navigation-drawer__border"
-    );
+    let el =  <Element>this.$refs.drawer.$el
+    let target = el.querySelector<HTMLElement>(".v-navigation-drawer__border");
 
     if (target !== null) {
       target.style.width = this.navigation.borderSize + "px";
@@ -180,6 +187,38 @@ export default class App extends Vue {
     this.editorWidth = window.innerWidth - this.navigation.width
   }
 
+  runSQL () {
+    if (this.viewingEditior === null || this.viewingEditior === undefined) return null
+    const editor = this.openEditiors[this.viewingEditior]
+    const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
+    const monaco = this.$refs['tab-'+editor.id+'-editor'][0]
+    const query = monaco._getValue()
+    ipcRenderer.send('server:runQuery', server.opts, query)
+  }
+
+  @Watch('servers')
+  onServerChange(val: any) {
+    const currentConn = this.seenConnections
+
+    if (val) {
+      for (let i = 0; i < val.length; i++) {
+        const server = val[i];
+        if (!currentConn.find(d => d.guiID === server.guiID)) {
+          currentConn.push(server)
+
+          this.$store.commit('monacoEditorCount')
+          this.viewingEditior = this.$store.state.monacoEditorCount
+          server.openEditiors = []
+          this.openEditiors.push({
+            id: this.$store.state.monacoEditorCount,
+            name: `SQL ${this.$store.state.monacoEditorCount}`,
+            connName: server.name,
+            serverGuiID: server.guiID
+          })
+        }
+      }
+    }
+  }
 }
 </script>
 
@@ -198,6 +237,12 @@ export default class App extends Vue {
 
   .v-application--wrap {
     min-height: calc(100vh - 60px);
+  }
+
+  .edit-tabs {
+    small {
+      font-size: 60%;
+    }
   }
 }
 </style>

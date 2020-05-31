@@ -181,3 +181,10 @@ ipcMain.on('server:getColumns', (e, config, table) => {
 ipcMain.on('server:getColumns:result', (e, result) => {
   if (win) win.webContents.send('server:getColumns:result', result);
 })
+
+// run Query
+ipcMain.on('server:runQuery', (e, config, query) => {
+  console.log('HIT HERE', query)
+  // if (dbWin) dbWin.webContents.send('server:server:runQuery', config, table);
+})
+

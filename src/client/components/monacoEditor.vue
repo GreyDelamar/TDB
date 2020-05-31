@@ -185,7 +185,6 @@ export default {
     },
 
     _emitChange(value, event) {
-      console.log("HIT");
       this.$emit("change", value, event);
       this.$emit("input", value);
     }

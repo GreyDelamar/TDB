@@ -57,8 +57,6 @@ export default new Vuex.Store({
     showLogin(context, val) {
       context.showLogin = val;
     },
-    serverConnect(context, config) {
-    },
     connectionAdd(context, val) {
       context.connections.push(val);
       window.localStorage.setItem("connections", JSON.stringify(context.connections));
