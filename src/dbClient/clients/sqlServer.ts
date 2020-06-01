@@ -153,11 +153,11 @@ export default class sqlServer {
     });
   }
 
-  public async runQuery (query: string): Promise<sql.IResult<unknown> | undefined> {
+  public async runQuery (query: string): Promise<queryResults> {
     const conn = await this.newConnection();
 
-    let t = <sql.IResult<unknown> | undefined>await new Promise((res, rej) => {
-      conn.query(query, (err, data) => {
+    let t = <queryResults>await new Promise((res, rej) => {
+      conn.query(query, (err, data: any) => {
         if (err) rej(err)
         else {
           res(data)
