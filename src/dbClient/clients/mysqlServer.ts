@@ -28,7 +28,7 @@ export default class mysqlServer {
         return new Promise((resolve, reject) => {
             this.pool.getConnection((err, connection) => {
                 if (err) {
-                    return reject(err)
+                  return reject(err)
                 }
 
                 resolve(connection)

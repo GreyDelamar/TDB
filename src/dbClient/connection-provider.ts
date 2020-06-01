@@ -69,11 +69,12 @@ export default class connectionProvider {
 
       return { success: true, message: "success" }
     } catch (err) {
+      console.error(err)
       return { success: false, message: "fail" }
     }
   }
 
-  private getClientByServerType(serverType: string, opts: connectionConfig): mysqlServer | sqlServer {
+  private getClientByServerType(serverType: string, opts: connectionConfig): sqlServer | mysqlServer {
     let client
 
     switch(serverType) {
