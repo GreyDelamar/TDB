@@ -21,11 +21,14 @@ module.exports = {
   pluginOptions: {
     electronBuilder: {
       mainProcessFile: 'src/main.ts',
+      nodeIntegration: true,
+      externals: ['mssql']
     }
   },
   configureWebpack: {
     node: {
-      dns: 'mock'
+      dns: 'mock',
+      __dirname: true
     },
     module: {
       rules: [

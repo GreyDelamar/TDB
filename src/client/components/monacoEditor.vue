@@ -134,6 +134,22 @@ export default {
         }
       });
 
+      $self.editor.addAction({
+        id: "run-sql",
+        label: "Run SQL",
+        keybindings: [
+          monaco.KeyMod.chord(
+            monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter
+          ),
+          monaco.KeyCode.F5
+        ],
+        contextMenuGroupId: "navigation",
+        run() {
+          $self.$emit("runSQL")
+          return true;
+        }
+      });
+
       $self.diffEditor && $self._setModel($self.value, $self.original);
       $self._editorMounted($self.editor);
     },
@@ -185,9 +201,11 @@ export default {
     },
 
     _emitChange(value, event) {
-      console.log("HIT");
       this.$emit("change", value, event);
       this.$emit("input", value);
+    },
+    _getSelectedText() {
+      return this.editor.getModel().getValueInRange(this.editor.getSelection())
     }
   }
 };
