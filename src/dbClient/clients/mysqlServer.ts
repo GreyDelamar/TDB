@@ -40,6 +40,17 @@ export default class mysqlServer {
         // return this.connection.end();
     }
 
+    public async runQuery(query: string) {
+      const conn = await this.newConnection()
+
+      return new Promise((resolve, reject) => {
+        conn.query(query, async (err, results) => {
+          if(err) reject(err) 
+          else resolve(results)
+        })
+      })
+    }
+
     public async getDatabases() {
         const conn = await this.newConnection()
         const ignoredSystemDatabases = [
