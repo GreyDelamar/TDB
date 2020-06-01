@@ -1,7 +1,13 @@
 import connectionProvider, { connectionConfig } from '@db/connection-provider'
 import { ipcRenderer } from 'electron';
 
-ipcRenderer.send('log:main', 'Starting Database Connection Provider')
+// log to main proccess so we can see the logs
+console.log = function () {
+  var args = [].slice.call(arguments);
+  ipcRenderer.send('log:main', ...args)
+}
+
+console.log('Starting Database Connection Provider')
 const connPro = new connectionProvider()
 
 connPro.addIPC('server:getDatabases', async (e: any, options: connectionConfig) => {
@@ -54,6 +60,10 @@ connPro.addIPC('server:removeConnection', async (e: any, options: connectionConf
   } catch (error) {
     console.log(error)
   }
+})
+
+connPro.addIPC('server:runQuery', async (e: any, options: connectionConfig, runQuery: string) => {
+  console.log('Run query', runQuery)
 })
 
 // Hope this will kill the DB on dev hot reloads
