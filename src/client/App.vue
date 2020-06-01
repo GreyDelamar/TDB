@@ -25,7 +25,7 @@
     <v-content class="pt-0 edit-tabs">
       <v-tabs v-if="openEditiors.length" v-model="viewingEditior" show-arrows>
         <v-tabs-slider></v-tabs-slider>
-        <v-tab v-for="oE in openEditiors" :key="oE.id" class="d-flex flex-column pl-2 pr-2">
+        <v-tab v-for="oE in openEditiors" :key="oE.guiID" class="d-flex flex-column pl-2 pr-2">
           <div>{{ oE.name }}</div>
           <small>
             <div>{{oE.connName}}</div>
@@ -34,8 +34,8 @@
       </v-tabs>
 
       <v-tabs-items v-model="viewingEditior" id="main_content">
-        <v-tab-item v-for="oE in openEditiors" :key="'tab-'+oE.id">
-          <MonacoEditor :ref="'tab-'+oE.id+'-editor'" class="pa-1" :width="editorWidth" :height="editorHeight"></MonacoEditor>
+        <v-tab-item v-for="oE in openEditiors" :key="'tab-'+oE.guiID">
+          <MonacoEditor :ref="'tab-'+oE.guiID+'-editor'" class="pa-1" :width="editorWidth" :height="editorHeight"></MonacoEditor>
         </v-tab-item>
       </v-tabs-items>
 
@@ -80,7 +80,7 @@ export default class App extends Vue {
   navigation: { width: number, borderSize: number }
   menuSearchVal: string
   editorWidth: number
-  editorHeight: number
+  editorHeight: number | string
   $refs!: { [key: string]: any}
   seenConnections: Array<{ [key: string]: any}>
   openEditiors: Array<{ [key: string]: any}>
@@ -91,7 +91,7 @@ export default class App extends Vue {
     this.navigation = { width: 350, borderSize: 5 }
     this.menuSearchVal = ""
     this.editorWidth = window.innerWidth - this.navigation.width
-    this.editorHeight = 50
+    this.editorHeight = window.innerHeight - 110
     this.openEditiors = []
     this.viewingEditior = null
     this.seenConnections = []
@@ -110,23 +110,28 @@ export default class App extends Vue {
   };
 
   mounted () {
+    ipcRenderer.on('server:runQuery:result', (e, data) => {
+      console.log(data)
+    })
+
+    ipcRenderer.on('log:main', (e, data) => {
+      console.log('LOG FROM MAIN OR DB', data)
+    })
+
     this.$store.commit("serverReplace", localStorage.getItem("servers"));
     this.setBorderWidth();
     this.setEvents();
     this.editorWidth = window.innerWidth - this.navigation.width
 
-    this.$nextTick(() => {
-      // This will resize the editor
-        const ro = new ResizeObserver((entries, observer) => {
-            for (const entry of entries) {
-                const {left, top, width, height} = entry.contentRect;
-                this.editorWidth = width
-                this.editorHeight = height
-            }
-        });
+    const ro = new ResizeObserver((entries, observer) => {
+        for (const entry of entries) {
+            const {left, top, width, height} = entry.contentRect;
+            this.editorWidth = width
+            this.editorHeight = height
+        }
+    });
 
-        ro.observe(<Element>document.getElementById("main_content"));
-    })
+    ro.observe(<Element>document.getElementById("main_content"));
   };
 
   setBorderWidth() {
@@ -191,9 +196,10 @@ export default class App extends Vue {
     if (this.viewingEditior === null || this.viewingEditior === undefined) return null
     const editor = this.openEditiors[this.viewingEditior]
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
-    const monaco = this.$refs['tab-'+editor.id+'-editor'][0]
+    const monaco = this.$refs['tab-'+editor.guiID+'-editor'][0]
     const query = monaco._getValue()
-    ipcRenderer.send('server:runQuery', server.opts, query)
+    if (!query) return null
+    ipcRenderer.send('server:runQuery', server.opts, editor.guiID, query)
   }
 
   @Watch('servers')
@@ -210,7 +216,7 @@ export default class App extends Vue {
           this.viewingEditior = this.$store.state.monacoEditorCount
           server.openEditiors = []
           this.openEditiors.push({
-            id: this.$store.state.monacoEditorCount,
+            guiID: this.$store.state.monacoEditorCount,
             name: `SQL ${this.$store.state.monacoEditorCount}`,
             connName: server.name,
             serverGuiID: server.guiID

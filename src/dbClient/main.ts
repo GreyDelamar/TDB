@@ -62,8 +62,15 @@ connPro.addIPC('server:removeConnection', async (e: any, options: connectionConf
   }
 })
 
-connPro.addIPC('server:runQuery', async (e: any, options: connectionConfig, runQuery: string) => {
-  console.log('Run query', runQuery)
+connPro.addIPC('server:runQuery', async (e: any, options: connectionConfig, editorGuiID: string, query: string) => {
+  try {
+    const client = await connPro.getConnection(options)
+    let results = await client.runQuery(query)
+    connPro.send('server:runQuery:result', { serverGuiID: options.guiID, editorGuiID, results })
+  } catch (error) {
+    connPro.send('server:runQuery:result', { serverGuiID: options.guiID, editorGuiID, error })
+    console.log('SOMETHING HAPPENED?', error)
+  }
 })
 
 // Hope this will kill the DB on dev hot reloads
