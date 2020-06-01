@@ -37,21 +37,21 @@ function createWindow() {
       nodeIntegration: true,
       // contextIsolation: true
     }
-  });``
-
+  });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
     dbWin.loadURL(process.env.WEBPACK_DEV_SERVER_URL + '/dbClient.html');
-    if (!process.env.IS_TEST) win.webContents.openDevTools();
     if (!process.env.IS_TEST) dbWin.webContents.openDevTools();
   } else {
     createProtocol("app");
     // Load the index.html when not in development
     win.loadURL("app://./index.html");
-    dbWin.loadURL("app://./dbClient.html'")
+    dbWin.loadURL(__dirname+"/dbClient.html")
   }
+
+  if (!process.env.IS_TEST) win.webContents.openDevTools();
 
   win.on("closed", () => {
     win = null;
@@ -132,11 +132,10 @@ if (isDevelopment) {
   }
 }
 
-if (isDevelopment) {
-  ipcMain.on('log:main', (e, val: any) => {
-    console.log(val)
-  })
-}
+ipcMain.on('log:main', (e, val: any) => {
+  if (win) win.webContents.send('log:main', val);
+})
+
 
 
 // --- ROUTER SECTION ---
@@ -180,4 +179,15 @@ ipcMain.on('server:getColumns', (e, config, table) => {
 
 ipcMain.on('server:getColumns:result', (e, result) => {
   if (win) win.webContents.send('server:getColumns:result', result);
+})
+
+// run Query
+ipcMain.on('server:runQuery', (e, config, editorGuiID, query) => {
+  if (dbWin) dbWin.webContents.send('server:runQuery', config, editorGuiID, query);
+})
+
+ipcMain.on('server:runQuery:result', (e, result) => {
+  // only send event to the tab that needs to know about it
+  // if (win) win.webContents.send(`server:runQuery:result:${result.editorGuiID}`, result);
+  if (win) win.webContents.send(`server:runQuery:result`, result);
 })

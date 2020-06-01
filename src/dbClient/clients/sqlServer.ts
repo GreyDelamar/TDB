@@ -23,7 +23,7 @@ export default class sqlServer {
     return this.pool.request();
   }
 
-  public close() {
+  public close () {
     return this.pool.close()
   }
 
@@ -151,6 +151,21 @@ export default class sqlServer {
 
       return result
     });
+  }
+
+  public async runQuery (query: string): Promise<sql.IResult<unknown> | undefined> {
+    const conn = await this.newConnection();
+
+    let t = <sql.IResult<unknown> | undefined>await new Promise((res, rej) => {
+      conn.query(query, (err, data) => {
+        if (err) rej(err)
+        else {
+          res(data)
+        }
+      })
+    });
+
+    return t
   }
 
 }

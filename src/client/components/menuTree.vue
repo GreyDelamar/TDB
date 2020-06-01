@@ -189,3 +189,11 @@ export default {
   }
 };
 </script>
+
+<style lang="scss" scoped>
+.v-treeview-node__append {
+  small {
+    font-size: 75%;
+  }
+}
+</style>
