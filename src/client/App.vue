@@ -7,7 +7,7 @@
     <v-app-bar app clipped-left>
       <!-- spacer to match nav drawer - v-app-bar padding -->
       <div :style="`width: calc(${navigation.width}px - 16px)`"></div>
-      <btnIconStack text="Run SQL" icon="fa-play" @clicked="runSQL"/>
+      <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="runSQL"/>
     </v-app-bar>
 
     <v-navigation-drawer
@@ -35,7 +35,7 @@
 
       <v-tabs-items v-model="viewingEditior" id="main_content">
         <v-tab-item v-for="oE in openEditiors" :key="'tab-'+oE.guiID">
-          <MonacoEditor :ref="'tab-'+oE.guiID+'-editor'" class="pa-1" :width="editorWidth" :height="editorHeight"></MonacoEditor>
+          <MonacoEditor @runSQL="runSQL" :ref="'tab-'+oE.guiID+'-editor'" class="pa-1" :width="editorWidth" :height="editorHeight"></MonacoEditor>
         </v-tab-item>
       </v-tabs-items>
 
@@ -110,13 +110,8 @@ export default class App extends Vue {
   };
 
   mounted () {
-    ipcRenderer.on('server:runQuery:result', (e, data) => {
-      console.log(data)
-    })
-
-    ipcRenderer.on('log:main', (e, data) => {
-      console.log('LOG FROM MAIN OR DB', data)
-    })
+    ipcRenderer.on('server:runQuery:result', this.logger)
+    ipcRenderer.on('log:main', this.logger)
 
     this.$store.commit("serverReplace", localStorage.getItem("servers"));
     this.setBorderWidth();
@@ -132,6 +127,15 @@ export default class App extends Vue {
     });
 
     ro.observe(<Element>document.getElementById("main_content"));
+  };
+
+  beforeDestroy () {
+    ipcRenderer.removeListener('log:main', this.logger)
+    ipcRenderer.removeListener('server:runQuery:result', this.logger)
+  };
+
+  logger (e:any, data:any) {
+    console.log('DB LOG - ', data)
   };
 
   setBorderWidth() {
@@ -198,8 +202,14 @@ export default class App extends Vue {
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
     const monaco = this.$refs['tab-'+editor.guiID+'-editor'][0]
     const query = monaco._getValue()
+    const selectedText = monaco._getSelectedText()
+
     if (!query) return null
-    ipcRenderer.send('server:runQuery', server.opts, editor.guiID, query)
+    ipcRenderer.send('server:runQuery', server.opts, editor.guiID, (selectedText || query))
+  }
+
+  hotkeys (e: KeyboardEvent) {
+    if(e.key === "F5") this.runSQL()
   }
 
   @Watch('servers')
