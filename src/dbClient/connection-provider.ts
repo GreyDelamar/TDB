@@ -61,42 +61,33 @@ export default class connectionProvider {
     opts.guiID = forceGuiID ? forceGuiID : this.generateUUID()
     opts = this.cleanOpts(opts)
 
-    // @TODO these two if's should be a switch statement
-    // Handle MS SQL Connection Type
-    if(opts.serverType == 'mssql') {
-      let sql = new sqlServer(opts, opts.guiID)
+    let client = this.getClientByServerType(opts.serverType, opts)
 
-      try {
-        // test connection
-        await sql.newConnection()
-        this.connections[opts.guiID] = { config: opts, client: sql }
-        return { success: true, message: "success" }
-      } catch (err) {
-        return { success: false, message: "fail" }
-      }
-    }
+    try {
+      await client.newConnection()
+      this.connections[opts.guiID] = { config: opts, client: client }
 
-    // Handle MySQL Connection Type
-    if (opts.serverType == 'mysql') {
-      let mysql = new mysqlServer(opts, opts.guiID)
-
-      let connection
-      try {
-        connection = await mysql.newConnection()
-      } catch (err) {
-        console.error(err)
-        return { success: false, message: "fail" }
-      }
-
-      if (connection.state !== 'authenticated') {
-        return { success: false, message: "fail" }
-      }
-
-      this.connections[opts.guiID] = { config: opts, client: mysql }
       return { success: true, message: "success" }
+    } catch (err) {
+      return { success: false, message: "fail" }
+    }
+  }
+
+  private getClientByServerType(serverType: string, opts: connectionConfig): mysqlServer | sqlServer {
+    let client
+
+    switch(serverType) {
+      case 'mssql':
+        client = new sqlServer(opts, opts.guiID)
+        break
+      case 'mysql':
+        client = new mysqlServer(opts, opts.guiID)
+        break
+      default:
+        throw Error("Invalid server type " + serverType)
     }
 
-    return { success: false, message: "fail" }
+    return client
   }
 
   public async getConnection (opts: connectionConfig) {

@@ -42,6 +42,11 @@ export default class mysqlServer {
 
     public async getDatabases() {
         const conn = await this.newConnection()
+        const ignoredSystemDatabases = [
+          'sys',
+          'information_schema',
+          'performance_schema'
+        ]
 
         return new Promise((resolve, reject) => {
             conn.query("SHOW DATABASES;", async (err, results) => {
@@ -50,6 +55,11 @@ export default class mysqlServer {
                 let returnResults = []
                 for(var index in results) {
                     const dbRow = results[index];
+
+                    if(ignoredSystemDatabases.includes(dbRow.Database)) {
+                      // avoid including system databases
+                      continue
+                    }
             
                     returnResults.push({
                         name: dbRow.Database,
