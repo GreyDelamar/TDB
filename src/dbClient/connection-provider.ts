@@ -3,10 +3,13 @@ import { ipcRenderer, IpcRendererEvent } from 'electron';
 import { v4 } from 'uuid';
 
 import sqlServer from '@db/clients/sqlServer';
+import mysqlServer from '@db/clients/mysqlServer';
 
 export interface connectionConfig {
   server: string
+  serverType: string,
   username: string
+  password: string
   user: string
   guiID: string
   port: number
@@ -33,6 +36,7 @@ export default class connectionProvider {
   private start () {
     this.addIPC('server:addConnection', async (e:any, opts:any) => {
       let conn = await this.addConnection(opts)
+
       ipcRenderer.send('server:addConnection:result', {
         success: conn.success,
         opts: {...opts, ...{ password: undefined }},
@@ -44,6 +48,7 @@ export default class connectionProvider {
   private cleanOpts (opts: connectionConfig) {
     opts.server = opts.server.trim()
     opts.username = opts.username.trim()
+    opts.password = opts.password.trim()
     opts.user = opts.username.trim()
     return opts
   }
@@ -56,17 +61,34 @@ export default class connectionProvider {
     opts.guiID = forceGuiID ? forceGuiID : this.generateUUID()
     opts = this.cleanOpts(opts)
 
-    let sql = new sqlServer(opts, opts.guiID)
+    let client = this.getClientByServerType(opts.serverType, opts)
 
-    try{
-      // test connection
-      await sql.newConnection()
-      this.connections[opts.guiID] = { config: opts, client: sql }
-      return {success: true, message: "success"}
+    try {
+      await client.newConnection()
+      this.connections[opts.guiID] = { config: opts, client: client }
+
+      return { success: true, message: "success" }
     } catch (err) {
-      return {success: false, message: "fail"}
+      console.error(err)
+      return { success: false, message: "fail" }
+    }
+  }
+
+  private getClientByServerType(serverType: string, opts: connectionConfig): sqlServer | mysqlServer {
+    let client
+
+    switch(serverType) {
+      case 'mssql':
+        client = new sqlServer(opts, opts.guiID)
+        break
+      case 'mysql':
+        client = new mysqlServer(opts, opts.guiID)
+        break
+      default:
+        throw Error("Invalid server type " + serverType)
     }
 
+    return client
   }
 
   public async getConnection (opts: connectionConfig) {

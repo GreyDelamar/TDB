@@ -12,13 +12,27 @@
       <v-card-text>
         <v-container>
           <v-row>
-            <v-col cols="12">
+            <v-col>
+              <!-- Server Type -->
+              <v-combobox 
+                v-model="serverType"
+                :items="serverTypes"
+                label="Server Type"
+                item-value="value"
+                cols="4"
+              ></v-combobox>
+            </v-col>
+
+            <!-- Server Hpst -->
+            <v-col cols="8">
               <v-text-field
                 v-model="server"
                 label="Server"
                 required
               ></v-text-field>
             </v-col>
+
+            <!-- Username -->
             <v-col cols="12">
               <v-text-field
                 v-model="username"
@@ -26,6 +40,8 @@
                 required
               ></v-text-field>
             </v-col>
+
+            <!-- Password -->
             <v-col cols="12">
               <v-text-field
                 v-model="password"
@@ -34,6 +50,8 @@
                 required
               ></v-text-field>
             </v-col>
+
+            <!-- Alert: Invalid Login -->
             <v-alert type="error" v-if="error">
               Invalid Login
             </v-alert>
@@ -51,6 +69,11 @@
 <script>
 import { ipcRenderer } from 'electron';
 
+const serverTypes = [
+  'mssql',
+  'mysql'
+]
+
 export default {
   name: "menuSearch",
 
@@ -60,10 +83,12 @@ export default {
 
   data: () => ({
     server: "",
+    serverType: "mssql",
     username: "",
     password: "",
     error: false,
     btnDisable: false,
+    serverTypes
   }),
 
   mounted () {
@@ -111,9 +136,11 @@ export default {
 
       let data = {
         server: $self.server,
+        serverType: this.serverType,
         username: $self.username,
         password: $self.password
       };
+
       ipcRenderer.send('server:addConnection', data)
     }
   }
