@@ -9,7 +9,7 @@
         </small>
       </v-tab>
     </v-tabs>
-    <resize-observer @notify="handleResize" />
+    <!-- <resize-observer @notify="handleResize" /> -->
     <div id="monaco_container">
       <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
     </div>
@@ -97,14 +97,14 @@ export default class EditorTabs extends Vue {
     if (oldVal === undefined || oldVal === null) oldVal = val // First load it will be null
 
     // save old tab state
-    this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, model: currentModel, value: currentValue})
+    this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
 
     // get new tab
     const newEditorTab = this.$store.getters.getCurrentEditorTab
 
     // update editor
-    if (newEditorTab.model) this.editor._setModel(newEditorTab.modelcurrentModel);
-    else this.editor._newModel();
+    // if (newEditorTab.model) this.editor._setModel(newEditorTab.modelcurrentModel);
+    // else this.editor._newModel();
     this.editor._setValue(newEditorTab.value || '');
     if (newEditorTab.state) editor.restoreViewState(newEditorTab.state);
 
