@@ -73,8 +73,8 @@ export default class EditorTabs extends Vue {
   }
 
   mounted () {
+    this.editor = this.$refs['moancoEditorMain']
     this.$nextTick(() => {
-      this.editor = this.$refs['moancoEditorMain']
       const el = <HTMLElement>this.$refs['editorView']
       this.editorWidth = el.offsetWidth
       this.editorHeight = el.offsetHeight - 48
@@ -177,10 +177,10 @@ export default class EditorTabs extends Vue {
 
 .results-panel {
   position: absolute;
-  top: 1px;
+  bottom: 50px !important;
   width: 100%;
   top: unset;
   bottom: 50px;
-  height: auto;
+  height: auto !important;
 }
 </style>
