@@ -3,9 +3,7 @@
 </template>
 
 <script>
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.main';
-// import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-// import sqlHighlight from "monaco-editor/esm/vs/basic-languages/sql/sql.contribution"; // eslint-disable-line
+import * as monaco from 'monaco-editor'
 
 export { monaco };
 
@@ -116,6 +114,7 @@ export default {
         value: value,
         language: language,
         theme: theme,
+        automaticLayout: false,
         ...options
       });
 
@@ -150,6 +149,21 @@ export default {
         }
       });
 
+      $self.editor.addAction({
+        id: "new-editor-tab",
+        label: "New Editor Tab",
+        keybindings: [
+          monaco.KeyMod.chord(
+            monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_T
+          )
+        ],
+        contextMenuGroupId: "navigation",
+        run() {
+          $self.$emit("newEditorTab")
+          return true;
+        }
+      });
+
       $self.diffEditor && $self._setModel($self.value, $self.original);
       $self._editorMounted($self.editor);
     },
@@ -159,14 +173,22 @@ export default {
       return this.diffEditor ? this.editor.modifiedEditor : this.editor;
     },
 
+    _newModel () {
+      this._setModel('', this.original)
+    },
+
     _setModel(value, original) {
       const { language } = this;
-      const originalModel = monaco.editor.createModel(original, language);
       const modifiedModel = monaco.editor.createModel(value, language);
-      this.editor.setModel({
-        original: originalModel,
-        modified: modifiedModel
-      });
+      if (original) {
+        const originalModel = monaco.editor.createModel(original, language);
+        this.editor.setModel({
+          original: originalModel,
+          modified: modifiedModel
+        });
+      } else {
+        this.editor.setModel(modifiedModel);
+      }
     },
 
     _setValue(value) {
