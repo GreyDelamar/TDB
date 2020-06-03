@@ -9,7 +9,10 @@ export default new Vuex.Store({
     showLogin: true,
     monacoEditorCount: 1,
     editorTabs: Array<mainStore.editorTab>(),
-    viewingEditorTab: null
+    viewingEditorTab: null,
+    mainViewHeight: null,
+    mainNavWidth: null,
+    mainViewWidth: null
   },
   mutations: {
     serverAdd(context, val) {
@@ -45,6 +48,15 @@ export default new Vuex.Store({
       currentTab.state = state
       currentTab.model = model
       currentTab.value = value
+    },
+    mainViewHeight (context, val) {
+      context.mainViewHeight = val
+    },
+    mainNavWidth (context, val) {
+      context.mainNavWidth = val
+    },
+    mainViewWidth (context, val) {
+      context.mainViewWidth = val
     }
   },
   actions: {
@@ -66,6 +78,12 @@ export default new Vuex.Store({
   getters: {
     getCurrentEditorTab (context) {
       return context.editorTabs[context.viewingEditorTab || 0]
+    },
+    mainViewHeight (context) {
+      return context.mainViewHeight
+    },
+    mainViewWidth (context) {
+      return context.mainViewWidth
     }
   }
 });
