@@ -1,4 +1,5 @@
 const path = require('path');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 module.exports = {
   lintOnSave: false,
@@ -21,8 +22,7 @@ module.exports = {
   pluginOptions: {
     electronBuilder: {
       mainProcessFile: 'src/main.ts',
-      nodeIntegration: true,
-      externals: ['mssql']
+      nodeIntegration: true
     }
   },
   configureWebpack: {
@@ -30,6 +30,9 @@ module.exports = {
       dns: 'mock',
       __dirname: true
     },
+    plugins: [
+      new MonacoWebpackPlugin()
+    ],
     module: {
       rules: [
         {

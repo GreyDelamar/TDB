@@ -14,7 +14,7 @@
           <v-row>
             <v-col>
               <!-- Server Type -->
-              <v-combobox 
+              <v-combobox
                 v-model="serverType"
                 :items="serverTypes"
                 label="Server Type"
@@ -113,8 +113,7 @@ export default {
   methods: {
     connectionHandler (e, data) {
       if (data.success && data.opts) {
-        this.$store.commit('serverAdd', data.server)
-        this.$store.commit('connectionAdd', data.opts)
+        this.$store.dispatch('addNewServer', data.server)
 
         this.server = ""
         this.username = ""

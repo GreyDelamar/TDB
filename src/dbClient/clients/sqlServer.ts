@@ -1,3 +1,4 @@
+"use strict";
 import * as sql from 'mssql';
 import { connectionConfig } from '@db/connection-provider'
 

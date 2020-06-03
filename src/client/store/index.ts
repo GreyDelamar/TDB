@@ -3,29 +3,13 @@ import Vuex from "vuex";
 
 Vue.use(Vuex);
 
-
-export interface connection {
-  server: string
-  username: string
-  user: string
-  guiID: string
-  port: number
-  database: string
-}
-
-export interface server {
-  name:  string
-  guiID: string
-  guiType: string
-}
-
-
 export default new Vuex.Store({
   state: {
-    connections: Array<connection>(),
-    servers: Array<server>(),
+    servers: Array<mainStore.server>(),
     showLogin: true,
-    monacoEditorCount: 0
+    monacoEditorCount: 1,
+    editorTabs: Array<mainStore.editorTab>(),
+    viewingEditorTab: null
   },
   mutations: {
     serverAdd(context, val) {
@@ -35,36 +19,53 @@ export default new Vuex.Store({
     serverRemove(context, val) {
       context.servers = context.servers.filter(d => d.guiID !== val);
       window.localStorage.setItem("servers", JSON.stringify(context.servers));
-      context.connections = context.connections.filter(d => d.guiID !== val);
-      window.localStorage.setItem("connections", JSON.stringify(context.connections));
-      if (!context.connections.length) {
+      if (!context.servers.length) {
         context.showLogin = true
-      }
-    },
-    serverReplace(context, val) {
-      try {
-        val = JSON.parse(val);
-        context.servers = val || [];
-        context.showLogin = context.servers.length === 0;
-        window.localStorage.setItem("servers", JSON.stringify(context.servers));
-      } catch (error) {
-        window.localStorage.setItem("servers", JSON.stringify([]));
-        console.error(
-          "ERROR PARSING LOCAL STORAGE.... CLEARING CACHED SERVERS"
-        );
       }
     },
     showLogin(context, val) {
       context.showLogin = val;
     },
-    connectionAdd(context, val) {
-      context.connections.push(val);
-      window.localStorage.setItem("connections", JSON.stringify(context.connections));
+    addEditorTab (context, server: mainStore.server) {
+      context.editorTabs.push({
+        guiID: 'editor-tab-'+context.monacoEditorCount,
+        name: `SQL ${context.monacoEditorCount}`,
+        connName: server.connName || server.name,
+        serverGuiID: server.guiID
+      })
+      context.monacoEditorCount++
     },
-    monacoEditorCount(context) {
-      context.monacoEditorCount = context.monacoEditorCount + 1
+    viewingEditorTab (context, idx) {
+      // It will pass the index postion it is viewing
+      // Ex. context.editorTabs[context.viewingEditorTab]
+      context.viewingEditorTab = idx
+    },
+    saveEditorTabContext (context, { tabIdx, state, model, value }) {
+      let currentTab = context.editorTabs[tabIdx]
+      currentTab.state = state
+      currentTab.model = model
+      currentTab.value = value
     }
   },
-  actions: {},
-  modules: {}
+  actions: {
+    addNewServer (context, server: mainStore.server) {
+      // prevent the same connection showing twice
+      if (!context.state.servers.find(d => d.guiID === server.guiID)) {
+        context.commit('serverAdd', server)
+        context.commit('addEditorTab', server)
+      }
+    },
+    resumeConnections (context, servers: Array<mainStore.server>) {
+      if (servers.length) context.commit('showLogin', false)
+      for (let i = 0; i < servers.length; i++) {
+        const serv = servers[i];
+        context.dispatch('addNewServer', serv)
+      }
+    }
+  },
+  getters: {
+    getCurrentEditorTab (context) {
+      return context.editorTabs[context.viewingEditorTab || 0]
+    }
+  }
 });

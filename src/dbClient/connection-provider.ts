@@ -1,4 +1,4 @@
-
+"use strict";
 import { ipcRenderer, IpcRendererEvent } from 'electron';
 import { v4 } from 'uuid';
 

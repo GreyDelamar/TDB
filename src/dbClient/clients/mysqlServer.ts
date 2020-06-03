@@ -1,3 +1,4 @@
+"use strict";
 import mysql from 'mysql'
 import { v4 } from 'uuid';
 import { connectionConfig } from '@db/connection-provider'
@@ -45,7 +46,7 @@ export default class mysqlServer {
 
       return new Promise((resolve, reject) => {
         conn.query(query, async (err, results) => {
-          if(err) reject(err) 
+          if(err) reject(err)
           else resolve(results)
         })
       })
@@ -71,7 +72,7 @@ export default class mysqlServer {
                       // avoid including system databases
                       continue
                     }
-            
+
                     returnResults.push({
                         name: dbRow.Database,
                         guiID: this.generateUUID(),
@@ -97,7 +98,7 @@ export default class mysqlServer {
           WHERE
             TABLE_SCHEMA = '${databaseName}'
         `
-        return new Promise((resolve, reject) => {         
+        return new Promise((resolve, reject) => {
           conn.query(query, async (err, results) => {
                 if (err) reject(err)
 
