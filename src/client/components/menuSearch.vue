@@ -20,13 +20,31 @@ export default {
     search: String
   },
 
+  data() {
+    return {
+      _timerId: null
+    };
+  },
+
+  methods: {
+    fetchEntriesDebounced(val) {
+      // cancel pending call
+      clearTimeout(this._timerId)
+
+      // delay new call 500ms
+      this._timerId = setTimeout(() => {
+        this.$emit("update:search", val);
+      }, 500)
+    }
+  },
+
   computed: {
     searchTemp: {
       get() {
         return this.$props.search;
       },
       set(val) {
-        this.$emit("update:search", val);
+        this.fetchEntriesDebounced(val)
       }
     }
   }
