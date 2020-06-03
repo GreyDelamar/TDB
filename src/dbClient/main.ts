@@ -1,3 +1,5 @@
+"use strict";
+
 import connectionProvider, { connectionConfig } from '@db/connection-provider'
 import { ipcRenderer } from 'electron';
 
