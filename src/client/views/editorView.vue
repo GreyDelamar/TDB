@@ -66,7 +66,9 @@ export default class EditorTabs extends Vue {
   }
 
   newEditorTab () {
-    this.$store.commit('addEditorTab', this.$store.getters.getCurrentEditorTab)
+    const editor = this.$store.getters.getCurrentEditorTab
+    const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
+    this.$store.commit('addEditorTab', server)
   }
 
   runSQL () {
