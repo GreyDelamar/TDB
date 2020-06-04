@@ -14,15 +14,17 @@
       app
       clipped
       :width="navigation.width"
-      ref="drawer"
+      ref="mainDrawer"
       permanent
     >
       <MenuSearch :search.sync="menuSearchVal" />
       <MenuTree :searchTerm="menuSearchVal" />
+      <resize-observer @notify="handleResize" />
     </v-navigation-drawer>
 
     <!-- Sizes your content based upon application components -->
-    <v-content class="pt-0 edit-tabs">
+    <v-content class="pt-0 edit-tabs" ref="mainContent">
+      <resize-observer @notify="handleResizeWidth" />
       <router-view></router-view>
     </v-content>
 
@@ -67,11 +69,40 @@ export default class App extends Vue {
     super();
     this.navigation = { width: 350, borderSize: 5 }
     this.menuSearchVal = ""
+
+    this.$nextTick(() => {
+      this.mainViewWidth = this.$refs.mainDrawer.$el.offsetWidth  - this.navigation.width
+    })
   }
 
   get servers () {
     return this.$store.state.servers
   }
+
+  get mainViewHeight () {
+    return this.$store.state.mainViewHeight
+  }
+
+  set mainViewHeight (val) {
+    this.$store.commit('mainViewHeight', val)
+  }
+
+  get mainViewWidth () {
+    return this.$store.state.mainViewWidth
+  }
+
+  set mainViewWidth (val) {
+    this.$store.commit('mainViewWidth', val)
+  }
+
+  get mainNavWidth () {
+    return this.$store.state.mainNavWidth
+  }
+
+  set mainNavWidth (val) {
+    this.$store.commit('mainNavWidth', val)
+  }
+
 
   beforeMount () {
     let resConn = localStorage.getItem("servers")
@@ -102,58 +133,59 @@ export default class App extends Vue {
     console.log('DB LOG - ', data)
   };
 
-  setBorderWidth() {
-    let el =  <Element>this.$refs.drawer.$el
-    let target = el.querySelector<HTMLElement>(".v-navigation-drawer__border");
+  handleResizeWidth (e: { width: number, height: number }) {
+    this.mainViewWidth = e.width;
+  };
 
-    if (target !== null) {
-      target.style.width = this.navigation.borderSize + "px";
-      target.style.cursor = "ew-resize";
-      target.style.backgroundColor = "#e8e8e8";
+  handleResize (e: { width: number, height: number }) {
+    this.mainViewHeight = e.height;
+    this.mainNavWidth = e.width;
+  };
+
+  getMenuBorder () {
+    const mainDrawer = <HTMLElement>this.$refs.mainDrawer.$el;
+    const border = mainDrawer.querySelector<HTMLElement>(".v-navigation-drawer__border");
+
+    return { mainDrawer, border };
+  }
+
+  setBorderWidth() {
+    let { border } = this.getMenuBorder()
+
+    if (border !== null) {
+      border.style.width = this.navigation.borderSize + "px";
+      border.style.cursor = "ew-resize";
+      border.style.backgroundColor = "#e8e8e8";
     }
   };
 
   setEvents() {
     const minSize = this.navigation.borderSize;
-    const el = <HTMLElement>this.$refs.drawer.$el;
-    const drawerBorder = el.querySelector<HTMLElement>(".v-navigation-drawer__border");
+    let { mainDrawer, border } = this.getMenuBorder()
     const vm = this;
-    const direction = el.classList.contains("v-navigation-drawer--right")
-      ? "right"
-      : "left";
+    const direction = mainDrawer.classList.contains("v-navigation-drawer--right") ? "right" : "left";
 
     function resize(e: any) {
       document.body.style.cursor = "ew-resize";
-      let f =
-        direction === "right"
-          ? document.body.scrollWidth - e.clientX
-          : e.clientX;
-      el.style.width = f + "px";
+      let f = direction === "right" ? document.body.scrollWidth - e.clientX : e.clientX;
+      mainDrawer.style.width = f + "px";
     }
 
-    if (drawerBorder !== null) {
-      drawerBorder.addEventListener(
-        "mousedown",
-        (e: MouseEvent) => {
-          if (e.offsetX < minSize) {
-            el.style.transition = "initial";
-            document.addEventListener("mousemove", resize, false);
-          }
-        },
-        false
-      );
+    if (border !== null) {
+      border.addEventListener("mousedown", (e: MouseEvent) => {
+        if (e.offsetX < minSize) {
+          mainDrawer.style.transition = "initial";
+          document.addEventListener("mousemove", resize, false);
+        }
+      }, false);
     }
 
-    document.addEventListener(
-      "mouseup",
-      () => {
-        el.style.transition = "";
-        this.navigation.width = parseFloat(el.style.width);
-        document.body.style.cursor = "";
-        document.removeEventListener("mousemove", resize, false);
-      },
-      false
-    );
+    document.addEventListener("mouseup", () => {
+      mainDrawer.style.transition = "";
+      this.navigation.width = parseFloat(mainDrawer.style.width);
+      document.body.style.cursor = "";
+      document.removeEventListener("mousemove", resize, false);
+    }, false);
   };
 
   runSQL () {
