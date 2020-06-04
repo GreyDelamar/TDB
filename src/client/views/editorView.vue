@@ -13,7 +13,9 @@
       <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
-          <v-data-table :headers="getEditorTabResultKeys(oE.guiID)" :items="getEditorTabResults(oE.guiID)" :items-per-page="5" dense class="elevation-1"></v-data-table>
+          <keep-alive>
+            <v-data-table :headers="getEditorTabResultKeys(oE.guiID)" :items="getEditorTabResults(oE.guiID)" :items-per-page="5" dense class="elevation-1"></v-data-table>
+          </keep-alive>
         </v-tab-item>
       </v-tabs-items>
     </div>
@@ -198,5 +200,7 @@ export default class EditorTabs extends Vue {
   top: unset;
   bottom: 50px;
   height: auto !important;
+  max-height: 50%;
+  overflow-y: auto;
 }
 </style>
