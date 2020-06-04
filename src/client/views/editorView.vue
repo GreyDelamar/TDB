@@ -1,4 +1,4 @@
-<template>
+  <template>
   <div ref="editorView" class="editorView">
     <v-tabs v-if="editorTabs.length" v-model="viewingEditor" show-arrows>
       <v-tabs-slider></v-tabs-slider>
@@ -13,7 +13,7 @@
       <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
-          <v-data-table :headers="headers" :items="desserts" :items-per-page="1000" class="elevation-1"></v-data-table>
+          <v-data-table :headers="getEditorTabResultKeys(oE.guiID)" :items="getEditorTabResults(oE.guiID)" :items-per-page="5" dense class="elevation-1"></v-data-table>
         </v-tab-item>
       </v-tabs-items>
     </div>
@@ -21,9 +21,9 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from "vue-property-decorator";
-import MonacoEditor from "@/components/monacoEditor.vue";
 import { ipcRenderer } from 'electron';
+import MonacoEditor from "@/components/monacoEditor.vue";
+import { Component, Vue, Watch } from "vue-property-decorator";
 
 @Component({
   components: {
@@ -34,37 +34,7 @@ export default class EditorTabs extends Vue {
   editor: any
   editorWidth: number | null
   editorHeight: number | null
-          headers= [
-          {
-            text: 'Dessert (100g serving)',
-            align: 'start',
-            sortable: false,
-            value: 'name',
-          },
-          { text: 'Calories', value: 'calories' },
-          { text: 'Fat (g)', value: 'fat' },
-          { text: 'Carbs (g)', value: 'carbs' },
-          { text: 'Protein (g)', value: 'protein' },
-          { text: 'Iron (%)', value: 'iron' },
-        ]
-        desserts= [
-          {
-            name: 'Frozen Yogurt',
-            calories: 159,
-            fat: 6.0,
-            carbs: 24,
-            protein: 4.0,
-            iron: '1%',
-          },
-          {
-            name: 'Ice cream sandwich',
-            calories: 237,
-            fat: 9.0,
-            carbs: 37,
-            protein: 4.3,
-            iron: '1%',
-          }
-        ]
+  columns = []
   constructor() {
     super();
     this.editor = null
@@ -73,12 +43,49 @@ export default class EditorTabs extends Vue {
   }
 
   mounted () {
+    ipcRenderer.on('server:runQuery:result', this.handleQueryResults)
     this.editor = this.$refs['moancoEditorMain']
     this.$nextTick(() => {
       const el = <HTMLElement>this.$refs['editorView']
       this.editorWidth = el.offsetWidth
       this.editorHeight = el.offsetHeight - 48
     })
+  }
+
+  beforeDestroy () {
+    ipcRenderer.removeListener('server:runQuery:result', this.handleQueryResults)
+  };
+
+  handleQueryResults (e:any, data: any) {
+    if (!data.error) {
+      console.log('Got results')
+      this.$store.commit('editorTabsResults', data)
+    } else {
+      console.log('Something went wrong')
+      console.log(data.error)
+    }
+  };
+
+  get getEditorTabResultKeys() {
+    return (editorGuiID: string) => {
+      if(this.editorTabsResults[editorGuiID]) {
+        return Object.keys(this.editorTabsResults[editorGuiID].recordset[0]).map(d => ({ text: d, value: d }))
+      }
+
+      return []
+    }
+  }
+
+  get getEditorTabResults() {
+    return (editorGuiID: string) => {
+      if(this.editorTabsResults[editorGuiID]) {
+        let results = this.editorTabsResults[editorGuiID].recordset
+        console.log(results)
+        return results
+      }
+
+      return []
+    }
   }
 
   get editorTabs () {
@@ -103,6 +110,15 @@ export default class EditorTabs extends Vue {
 
   get mainViewWidth () {
     return this.$store.getters.mainViewWidth
+  }
+
+  get editorTabsResults () {
+    return this.$store.getters.editorTabsResults
+  }
+
+  @Watch('editorTabsResults', { deep: true })
+  editorTabsResultsChange () {
+    this.$store.getters.getCurrentEditorResults //- records
   }
 
   newEditorTab () {

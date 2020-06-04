@@ -19,6 +19,7 @@
     "@types/uuid": "^8.0.0",
     "axios": "^0.19.2",
     "core-js": "^3.6.4",
+    "fuse.js": "^6.0.2",
     "lodash": "^4.17.15",
     "monaco-editor": "^0.20.0",
     "monaco-editor-webpack-plugin": "^1.9.0",

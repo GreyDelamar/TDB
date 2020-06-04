@@ -9,6 +9,7 @@ export default new Vuex.Store({
     showLogin: true,
     monacoEditorCount: 1,
     editorTabs: Array<mainStore.editorTab>(),
+    editorTabsResults: <mainStore.editorTabsResults>{},
     viewingEditorTab: null,
     mainViewHeight: null,
     mainNavWidth: null,
@@ -57,6 +58,9 @@ export default new Vuex.Store({
     },
     mainViewWidth (context, val) {
       context.mainViewWidth = val
+    },
+    editorTabsResults (context, val:any) {
+      context.editorTabsResults = Object.assign({}, context.editorTabsResults, { [val.editorGuiID]: (val.results || val.error) })
     }
   },
   actions: {
@@ -84,6 +88,13 @@ export default new Vuex.Store({
     },
     mainViewWidth (context) {
       return context.mainViewWidth
+    },
+    getCurrentEditorResults (context) {
+      let editor = context.editorTabs[context.viewingEditorTab || 0]
+      return context.editorTabsResults[editor.guiID]
+    },
+    editorTabsResults (context) {
+      return context.editorTabsResults
     }
   }
 });
