@@ -24,6 +24,17 @@ declare namespace mainStore {
     model?: any
     value?: any
   }
+
+  interface editorTabsResults {
+    [ key: string ]: {
+      columns?: Array<{ text: string }>
+      output?: object // seems to be empty most of the time
+      recordset?: Array<queryRow> // not reall needed
+      recordsets?: [ [ queryRow ] ] // should be like this
+      rowsAffected?: [] // count of rows affected
+      error?: string
+    }
+  }
 }
 
 declare module 'vue-resize'

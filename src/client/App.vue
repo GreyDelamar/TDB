@@ -117,7 +117,6 @@ export default class App extends Vue {
   };
 
   mounted () {
-    ipcRenderer.on('server:runQuery:result', this.logger)
     ipcRenderer.on('log:main', this.logger)
 
     this.setBorderWidth();
@@ -126,7 +125,6 @@ export default class App extends Vue {
 
   beforeDestroy () {
     ipcRenderer.removeListener('log:main', this.logger)
-    ipcRenderer.removeListener('server:runQuery:result', this.logger)
   };
 
   logger (e:any, data:any) {
