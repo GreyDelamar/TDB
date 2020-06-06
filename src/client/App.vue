@@ -158,15 +158,16 @@ export default class App extends Vue {
   };
 
   setEvents() {
+    const $self = this;
     const minSize = this.navigation.borderSize;
     let { mainDrawer, border } = this.getMenuBorder()
-    const vm = this;
     const direction = mainDrawer.classList.contains("v-navigation-drawer--right") ? "right" : "left";
 
     function resize(e: any) {
       document.body.style.cursor = "ew-resize";
       let f = direction === "right" ? document.body.scrollWidth - e.clientX : e.clientX;
       mainDrawer.style.width = f + "px";
+      $self.navigation.width = f;
     }
 
     if (border !== null) {
@@ -180,7 +181,6 @@ export default class App extends Vue {
 
     document.addEventListener("mouseup", () => {
       mainDrawer.style.transition = "";
-      this.navigation.width = parseFloat(mainDrawer.style.width);
       document.body.style.cursor = "";
       document.removeEventListener("mousemove", resize, false);
     }, false);
