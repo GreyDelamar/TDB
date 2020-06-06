@@ -13,13 +13,13 @@
       <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
-          <div v-if="oE.showResultsPanel" :style="{ height: oE.minMaxResultsPanel ? editorHeight+'px' : resultsPanelHeight(oE.resultsPanelHeight), 'max-height': editorHeight+'px' }">
+          <div v-if="oE.showResultsPanel" class="inner-panel" :style="{ height: oE.minMaxResultsPanel ? editorHeight+'px' : resultsPanelHeight(oE.resultsPanelHeight), 'max-height': editorHeight+'px' }">
             <keep-alive>
               <resultsPanelActions :panelToggled="oE.minMaxResultsPanel" @exitPanel="hideResultsPanel" @togglePanel="togglePanelSize" />
             </keep-alive>
 
             <keep-alive>
-              <v-data-table :loading="oE.resultsPanelLoading" :headers="getEditorTabResultKeys(oE.guiID)" :items="getEditorTabResults(oE.guiID)" :items-per-page="5" dense class="elevation-1"></v-data-table>
+              <v-data-table :loading="oE.resultsPanelLoading" :headers="getEditorTabResultKeys(oE.guiID)" :items="getEditorTabResults(oE.guiID)" :items-per-page="5" dense class="elevation-1" :style="{'max-height': (editorHeight - 30) + 'px'}"></v-data-table>
             </keep-alive>
           </div>
         </v-tab-item>
@@ -195,7 +195,8 @@ export default class EditorTabs extends Vue {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+
 .editorView {
   height: 100%;
 }
@@ -219,5 +220,25 @@ export default class EditorTabs extends Vue {
   height: auto !important;
   overflow-y: auto;
   z-index: 99;
+  .inner-panel {
+    position: relative;
+
+    .v-data-table {
+      overflow-y: auto;
+
+      .v-data-table__wrapper {
+        margin-bottom: 59px;
+      }
+
+      .v-data-footer {
+        background-color: #232323;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
+    }
+  }
 }
+
 </style>

@@ -1,5 +1,4 @@
 <template>
-
   <div class="panel-actions d-flex justify-end pa-1 pr-3 pl-3">
     <!-- Min/Max buttons -->
     <v-tooltip top v-if="!panelToggled">
