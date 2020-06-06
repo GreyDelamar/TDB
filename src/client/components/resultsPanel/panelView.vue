@@ -5,7 +5,7 @@
     </keep-alive>
 
     <keep-alive>
-      <panelTable :openEditor="openEditor" :tableHeight="openEditor.minMaxResultsPanel ? (editorHeight - 30) +'px' : tableHeight(openEditor.resultsPanelHeight)"/>
+      <panelTable :openEditor="openEditor" :tableHeight="openEditor.minMaxResultsPanel ? (editorHeight - 30) : tableHeight(openEditor.resultsPanelHeight)"/>
     </keep-alive>
   </div>
 </template>
