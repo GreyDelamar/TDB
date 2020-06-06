@@ -13,9 +13,15 @@
       <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
-          <keep-alive>
-            <v-data-table :headers="getEditorTabResultKeys(oE.guiID)" :items="getEditorTabResults(oE.guiID)" :items-per-page="5" dense class="elevation-1"></v-data-table>
-          </keep-alive>
+          <div v-if="oE.showResultsPanel" :style="{ height: oE.minMaxResultsPanel ? editorHeight+'px' : resultsPanelHeight(oE.resultsPanelHeight) }">
+            <keep-alive>
+              <resultsPanelActions :panelToggled="oE.minMaxResultsPanel" @exitPanel="hideResultsPanel" @togglePanel="togglePanelSize" />
+            </keep-alive>
+
+            <keep-alive>
+              <v-data-table :loading="oE.resultsPanelLoading" :headers="getEditorTabResultKeys(oE.guiID)" :items="getEditorTabResults(oE.guiID)" :items-per-page="5" dense class="elevation-1"></v-data-table>
+            </keep-alive>
+          </div>
         </v-tab-item>
       </v-tabs-items>
     </div>
@@ -24,19 +30,22 @@
 
 <script lang="ts">
 import { ipcRenderer } from 'electron';
-import MonacoEditor from "@/components/monacoEditor.vue";
 import { Component, Vue, Watch } from "vue-property-decorator";
+
+import MonacoEditor from "@/components/monacoEditor.vue";
+import resultsPanelActions from "@/components/resultsPanelActions.vue";
 
 @Component({
   components: {
-    MonacoEditor
+    MonacoEditor,
+    resultsPanelActions
   }
 })
 export default class EditorTabs extends Vue {
   editor: any
   editorWidth: number | null
   editorHeight: number | null
-  columns = []
+
   constructor() {
     super();
     this.editor = null
@@ -68,6 +77,18 @@ export default class EditorTabs extends Vue {
     }
   };
 
+  hideResultsPanel (e: any) {
+    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: false})
+  }
+
+  resultsPanelHeight (resultsPanelHeight: number | undefined) {
+    return resultsPanelHeight ? resultsPanelHeight+'px' : '40%'
+  }
+
+  togglePanelSize() {
+    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, minMaxResultsPanel: 'toggle'})
+  }
+
   get getEditorTabResultKeys() {
     return (editorGuiID: string) => {
       if(this.editorTabsResults[editorGuiID]) {
@@ -82,7 +103,6 @@ export default class EditorTabs extends Vue {
     return (editorGuiID: string) => {
       if(this.editorTabsResults[editorGuiID]) {
         let results = this.editorTabsResults[editorGuiID].recordset
-        console.log(results)
         return results
       }
 
@@ -91,6 +111,7 @@ export default class EditorTabs extends Vue {
   }
 
   get editorTabs () {
+    console.log('HIT')
     return this.$store.state.editorTabs
   }
 
@@ -120,7 +141,7 @@ export default class EditorTabs extends Vue {
 
   @Watch('editorTabsResults', { deep: true })
   editorTabsResultsChange () {
-    this.$store.getters.getCurrentEditorResults //- records
+    // this.$store.getters.getCurrentEditorResults //- records
   }
 
   newEditorTab () {
@@ -135,6 +156,8 @@ export default class EditorTabs extends Vue {
     const monaco = this.editor
     const query = monaco._getValue()
     const selectedText = monaco._getSelectedText()
+
+    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true})
 
     if (!query) return null
     ipcRenderer.send('server:runQuery', server.opts, editor.guiID, (selectedText || query))
@@ -200,7 +223,7 @@ export default class EditorTabs extends Vue {
   top: unset;
   bottom: 50px;
   height: auto !important;
-  max-height: 50%;
   overflow-y: auto;
+  z-index: 99;
 }
 </style>

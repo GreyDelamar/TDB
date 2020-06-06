@@ -7,7 +7,7 @@
     <v-app-bar app clipped-left>
       <!-- spacer to match nav drawer - v-app-bar padding -->
       <div :style="`width: calc(${navigation.width}px - 16px)`"></div>
-      <btnIconStack lineOne="Run SQL" icon="fa-play" />
+      <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="runSQL" />
     </v-app-bar>
 
     <v-navigation-drawer
@@ -187,6 +187,7 @@ export default class App extends Vue {
   };
 
   runSQL () {
+    console.log('I AM BROKEN')
     // this.$store.state.editorEventBus.$emit('runSQL')
   }
 }
@@ -221,6 +222,9 @@ export default class App extends Vue {
 
   .v-window-item {
     height: 100%;
+  }
+  .v-icon.v-icon {
+    font-size: 18px;
   }
 }
 </style>

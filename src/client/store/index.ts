@@ -35,7 +35,9 @@ export default new Vuex.Store({
         guiID: 'editor-tab-'+context.monacoEditorCount,
         name: `SQL ${context.monacoEditorCount}`,
         connName: server.connName || server.name,
-        serverGuiID: server.guiID
+        serverGuiID: server.guiID,
+        showResultsPanel: false,
+        minMaxResultsPanel: null
       })
       context.monacoEditorCount++
     },
@@ -44,11 +46,14 @@ export default new Vuex.Store({
       // Ex. context.editorTabs[context.viewingEditorTab]
       context.viewingEditorTab = idx
     },
-    saveEditorTabContext (context, { tabIdx, state, model, value }) {
+    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel }) {
       let currentTab = context.editorTabs[tabIdx]
-      currentTab.state = state
-      currentTab.model = model
-      currentTab.value = value
+      if (state !== undefined) currentTab.state = state
+      if (model !== undefined) currentTab.model = model
+      if (value !== undefined) currentTab.value = value
+      if (showResultsPanel !== undefined) currentTab.showResultsPanel = showResultsPanel === 'toggle' ? !currentTab.showResultsPanel : showResultsPanel
+      if (minMaxResultsPanel !== undefined) currentTab.minMaxResultsPanel = minMaxResultsPanel === 'toggle' ? !currentTab.minMaxResultsPanel : minMaxResultsPanel
+      if (resultsPanelLoading !== undefined) currentTab.resultsPanelLoading = resultsPanelLoading
     },
     mainViewHeight (context, val) {
       context.mainViewHeight = val
@@ -60,6 +65,8 @@ export default new Vuex.Store({
       context.mainViewWidth = val
     },
     editorTabsResults (context, val:any) {
+      let editorTab = context.editorTabs.find(d => d.guiID === val.editorGuiID)
+      if (editorTab) editorTab.resultsPanelLoading = false
       context.editorTabsResults = Object.assign({}, context.editorTabsResults, { [val.editorGuiID]: (val.results || val.error) })
     }
   },
