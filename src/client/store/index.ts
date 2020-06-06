@@ -47,7 +47,7 @@ export default new Vuex.Store({
       context.viewingEditorTab = idx
     },
     saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel }) {
-      let currentTab = context.editorTabs[tabIdx]
+      let currentTab = context.editorTabs[tabIdx || context.viewingEditorTab]
       if (state !== undefined) currentTab.state = state
       if (model !== undefined) currentTab.model = model
       if (value !== undefined) currentTab.value = value

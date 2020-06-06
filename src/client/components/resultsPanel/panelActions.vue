@@ -3,13 +3,13 @@
     <!-- Min/Max buttons -->
     <v-tooltip top v-if="!panelToggled">
       <template v-slot:activator="{ on }">
-        <v-icon @click.stop="$emit('togglePanel', true)" v-on="on" class="mr-5">fa-window-maximize</v-icon>
+        <v-icon @click.stop="togglePanelSize" v-on="on" class="mr-5">fa-window-maximize</v-icon>
       </template>
       <span style="text-transform: capitalize;">Maximize Panel</span>
     </v-tooltip>
     <v-tooltip top v-else>
       <template v-slot:activator="{ on }">
-        <v-icon @click.stop="$emit('togglePanel', false)" v-on="on" class="mr-5 fa-inverse">fa-window-minimize</v-icon>
+        <v-icon @click.stop="togglePanelSize" v-on="on" class="mr-5 fa-inverse">fa-window-minimize</v-icon>
       </template>
       <span style="text-transform: capitalize;">Minimize Panel</span>
     </v-tooltip>
@@ -17,7 +17,7 @@
     <!-- Exit button -->
     <v-tooltip top>
       <template v-slot:activator="{ on }">
-        <v-icon @click.stop="$emit('exitPanel')" v-on="on">fa-times</v-icon>
+        <v-icon @click.stop="hideResultsPanel" v-on="on">fa-times</v-icon>
       </template>
       <span style="text-transform: capitalize;">Exit Panel</span>
     </v-tooltip>
@@ -33,7 +33,15 @@ import { Component, Vue } from "vue-property-decorator";
     panelToggled: Boolean
   }
 })
-export default class resultsPanelActions extends Vue {}
+export default class ResultsPanelActions extends Vue {
+  hideResultsPanel (e: any) {
+    this.$store.commit('saveEditorTabContext', { showResultsPanel: false})
+  };
+
+  togglePanelSize() {
+    this.$store.commit('saveEditorTabContext', { minMaxResultsPanel: 'toggle'})
+  }
+}
 </script>
 
 <style lang="scss" scoped>

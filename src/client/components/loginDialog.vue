@@ -75,7 +75,7 @@ const serverTypes = [
 ]
 
 export default {
-  name: "menuSearch",
+  name: "loginDialog",
 
   props: {
     dialog: Boolean

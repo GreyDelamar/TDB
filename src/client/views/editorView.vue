@@ -13,15 +13,7 @@
       <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
-          <div v-if="oE.showResultsPanel" class="inner-panel" :style="{ height: oE.minMaxResultsPanel ? editorHeight+'px' : resultsPanelHeight(oE.resultsPanelHeight), 'max-height': editorHeight+'px' }">
-            <keep-alive>
-              <resultsPanelActions :panelToggled="oE.minMaxResultsPanel" @exitPanel="hideResultsPanel" @togglePanel="togglePanelSize" />
-            </keep-alive>
-
-            <keep-alive>
-              <v-data-table :loading="oE.resultsPanelLoading" :headers="getEditorTabResultKeys(oE.guiID)" :items="getEditorTabResults(oE.guiID)" :items-per-page="5" dense class="elevation-1" :style="{'max-height': (editorHeight - 30) + 'px'}"></v-data-table>
-            </keep-alive>
-          </div>
+          <ResultsPanelView :show="oE.showResultsPanel" :openEditor="oE" :editorHeight="editorHeight"/>
         </v-tab-item>
       </v-tabs-items>
     </div>
@@ -33,12 +25,12 @@ import { ipcRenderer } from 'electron';
 import { Component, Vue, Watch } from "vue-property-decorator";
 
 import MonacoEditor from "@/components/monacoEditor.vue";
-import resultsPanelActions from "@/components/resultsPanelActions.vue";
+import ResultsPanelView from "@/components/resultsPanel/panelView.vue";
 
 @Component({
   components: {
     MonacoEditor,
-    resultsPanelActions
+    ResultsPanelView
   }
 })
 export default class EditorTabs extends Vue {
@@ -77,39 +69,6 @@ export default class EditorTabs extends Vue {
     }
   };
 
-  hideResultsPanel (e: any) {
-    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: false})
-  }
-
-  resultsPanelHeight (resultsPanelHeight: number | undefined) {
-    return resultsPanelHeight ? resultsPanelHeight+'px' : '40%'
-  }
-
-  togglePanelSize() {
-    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, minMaxResultsPanel: 'toggle'})
-  }
-
-  get getEditorTabResultKeys() {
-    return (editorGuiID: string) => {
-      if(this.editorTabsResults[editorGuiID]) {
-        return Object.keys(this.editorTabsResults[editorGuiID].recordset[0]).map(d => ({ text: d, value: d }))
-      }
-
-      return []
-    }
-  }
-
-  get getEditorTabResults() {
-    return (editorGuiID: string) => {
-      if(this.editorTabsResults[editorGuiID]) {
-        let results = this.editorTabsResults[editorGuiID].recordset
-        return results
-      }
-
-      return []
-    }
-  }
-
   get editorTabs () {
     return this.$store.state.editorTabs
   }
@@ -132,10 +91,6 @@ export default class EditorTabs extends Vue {
 
   get mainViewWidth () {
     return this.$store.getters.mainViewWidth
-  }
-
-  get editorTabsResults () {
-    return this.$store.getters.editorTabsResults
   }
 
   newEditorTab () {
@@ -195,7 +150,7 @@ export default class EditorTabs extends Vue {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 
 .editorView {
   height: 100%;
@@ -218,27 +173,8 @@ export default class EditorTabs extends Vue {
   top: unset;
   bottom: 50px;
   height: auto !important;
-  overflow-y: auto;
+  overflow-y: hidden;
   z-index: 99;
-  .inner-panel {
-    position: relative;
-
-    .v-data-table {
-      overflow-y: auto;
-
-      .v-data-table__wrapper {
-        margin-bottom: 59px;
-      }
-
-      .v-data-footer {
-        background-color: #232323;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-      }
-    }
-  }
 }
 
 </style>
