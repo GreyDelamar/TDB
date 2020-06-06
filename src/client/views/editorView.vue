@@ -13,7 +13,7 @@
       <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
-          <div v-if="oE.showResultsPanel" :style="{ height: oE.minMaxResultsPanel ? editorHeight+'px' : resultsPanelHeight(oE.resultsPanelHeight) }">
+          <div v-if="oE.showResultsPanel" :style="{ height: oE.minMaxResultsPanel ? editorHeight+'px' : resultsPanelHeight(oE.resultsPanelHeight), 'max-height': editorHeight+'px' }">
             <keep-alive>
               <resultsPanelActions :panelToggled="oE.minMaxResultsPanel" @exitPanel="hideResultsPanel" @togglePanel="togglePanelSize" />
             </keep-alive>
@@ -111,7 +111,6 @@ export default class EditorTabs extends Vue {
   }
 
   get editorTabs () {
-    console.log('HIT')
     return this.$store.state.editorTabs
   }
 
@@ -137,11 +136,6 @@ export default class EditorTabs extends Vue {
 
   get editorTabsResults () {
     return this.$store.getters.editorTabsResults
-  }
-
-  @Watch('editorTabsResults', { deep: true })
-  editorTabsResultsChange () {
-    // this.$store.getters.getCurrentEditorResults //- records
   }
 
   newEditorTab () {
