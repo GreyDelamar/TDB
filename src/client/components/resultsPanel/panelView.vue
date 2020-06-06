@@ -44,6 +44,8 @@ export default class ResultsPanelView extends Vue {
       position: relative;
 
       .v-data-table {
+        position: relative;
+
         .v-data-table__wrapper {
           padding-bottom: 59px;
         }
