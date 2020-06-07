@@ -6,8 +6,11 @@
 
     <v-app-bar app clipped-left>
       <!-- spacer to match nav drawer - v-app-bar padding -->
-      <div :style="`width: calc(${navigation.width}px - 16px)`"></div>
-      <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="runSQL" />
+      <div :style="`width: calc(${navigation.width}px - 16px)`">
+        <btnIconStack lineOne="Add" lineTwo="Connection" icon="fa-plug" @clicked="toggleLoginDialog" />
+
+      </div>
+      <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="$emit('runSQL');" />
     </v-app-bar>
 
     <v-navigation-drawer
@@ -186,9 +189,8 @@ export default class App extends Vue {
     }, false);
   };
 
-  runSQL () {
-    console.log('I AM BROKEN')
-    // this.$store.state.editorEventBus.$emit('runSQL')
+  toggleLoginDialog () {
+    this.$store.commit('showLogin', true)
   }
 }
 </script>

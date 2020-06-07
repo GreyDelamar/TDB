@@ -21,7 +21,24 @@ export default new Vuex.Store({
       window.localStorage.setItem("servers", JSON.stringify(context.servers));
     },
     serverRemove(context, val) {
+      let editorGuiIDs = <any>[]
+
+      // Remove server
       context.servers = context.servers.filter(d => d.guiID !== val);
+
+      // Clear open editors belong to server
+      context.editorTabs = context.editorTabs.filter(d => {
+        if (d.serverGuiID === val) editorGuiIDs.push(d.guiID)
+        return d.serverGuiID !== val
+      });
+
+      // Clear the results out of store
+      for (let idx = 0; idx < editorGuiIDs.length; idx++) {
+        const guiID = editorGuiIDs[idx];
+        delete context.editorTabsResults[guiID]
+      }
+
+      // Set server list in localstorage for later use
       window.localStorage.setItem("servers", JSON.stringify(context.servers));
       if (!context.servers.length) {
         context.showLogin = true
@@ -68,6 +85,13 @@ export default new Vuex.Store({
       let editorTab = context.editorTabs.find(d => d.guiID === val.editorGuiID)
       if (editorTab) editorTab.resultsPanelLoading = false
       context.editorTabsResults = Object.assign({}, context.editorTabsResults, { [val.editorGuiID]: (val.results || val.error) })
+    },
+    removeEditorTab (context, guiID: string) {
+      // Remove editor tab
+      context.editorTabs = context.editorTabs.filter(d => d.guiID !== guiID);
+
+      // Clear the results out of store
+      delete context.editorTabsResults[guiID]
     }
   },
   actions: {

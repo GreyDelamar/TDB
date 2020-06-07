@@ -1,12 +1,21 @@
   <template>
-  <div ref="editorView" class="editorView">
-    <v-tabs v-if="editorTabs.length" v-model="viewingEditor" show-arrows>
+  <div ref="editorView" class="editorView" v-show="editorTabs.length">
+    <v-tabs v-model="viewingEditor" show-arrows>
       <v-tabs-slider></v-tabs-slider>
       <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2">
-        <div>{{ oE.name }}</div>
-        <small>
-          <div>{{oE.connName}}</div>
-        </small>
+        <div class="d-flex">
+          <div>
+            <div>
+              {{ oE.name }}
+            </div>
+            <small>
+              <div>{{oE.connName}}</div>
+            </small>
+          </div>
+          <div class="ml-3 d-flex flex-column justify-center">
+            <v-icon @click="exitEditor(oE.guiID)">fa-times</v-icon>
+          </div>
+        </div>
       </v-tab>
     </v-tabs>
     <div id="monaco_container">
@@ -48,6 +57,10 @@ export default class EditorTabs extends Vue {
   mounted () {
     ipcRenderer.on('server:runQuery:result', this.handleQueryResults)
     this.editor = this.$refs['moancoEditorMain']
+
+     //-Listen for the toolbar runSQL btn
+    this.$parent.$parent.$on('runSQL', this.runSQL);
+
     this.$nextTick(() => {
       const el = <HTMLElement>this.$refs['editorView']
       this.editorWidth = el.offsetWidth
@@ -110,6 +123,10 @@ export default class EditorTabs extends Vue {
 
     if (!query) return null
     ipcRenderer.send('server:runQuery', server.opts, editor.guiID, (selectedText || query))
+  }
+
+  exitEditor(guiID: string) {
+    this.$store.commit('removeEditorTab', guiID)
   }
 
   @Watch('viewingEditor')
