@@ -55,7 +55,7 @@ export default class ResultsPanelView extends Vue {
           position: absolute;
           bottom: 0;
           left: 0;
-          right: -7px;
+          right: -8px;
         }
       }
     }
