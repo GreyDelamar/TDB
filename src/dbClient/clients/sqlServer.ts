@@ -36,7 +36,7 @@ export default class sqlServer {
         create_date,
         database_id,
         name,
-        service_broker_guid AS guiID
+        NEWID() AS guiID
       FROM
           sys.databases
       WHERE

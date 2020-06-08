@@ -60,6 +60,7 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
+        <v-btn v-bind:disabled="btnDisable" text @click="cancel">Cancel</v-btn>
         <v-btn v-bind:disabled="btnDisable" text @click="submit">Login</v-btn>
       </v-card-actions>
     </v-card>
@@ -75,7 +76,7 @@ const serverTypes = [
 ]
 
 export default {
-  name: "menuSearch",
+  name: "loginDialog",
 
   props: {
     dialog: Boolean
@@ -141,6 +142,14 @@ export default {
       };
 
       ipcRenderer.send('server:addConnection', data)
+    },
+    cancel() {
+      this.server = ""
+      this.username = ""
+      this.password = ""
+      this.error = false
+      this.btnDisable = false;
+      this.$store.commit('showLogin', false)
     }
   }
 };

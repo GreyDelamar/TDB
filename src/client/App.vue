@@ -6,8 +6,11 @@
 
     <v-app-bar app clipped-left>
       <!-- spacer to match nav drawer - v-app-bar padding -->
-      <div :style="`width: calc(${navigation.width}px - 16px)`"></div>
-      <btnIconStack lineOne="Run SQL" icon="fa-play" />
+      <div :style="`width: calc(${navigation.width}px - 16px)`">
+        <btnIconStack lineOne="Add" lineTwo="Connection" icon="fa-plug" @clicked="toggleLoginDialog" />
+
+      </div>
+      <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="$emit('runSQL');" />
     </v-app-bar>
 
     <v-navigation-drawer
@@ -158,15 +161,16 @@ export default class App extends Vue {
   };
 
   setEvents() {
+    const $self = this;
     const minSize = this.navigation.borderSize;
     let { mainDrawer, border } = this.getMenuBorder()
-    const vm = this;
     const direction = mainDrawer.classList.contains("v-navigation-drawer--right") ? "right" : "left";
 
     function resize(e: any) {
       document.body.style.cursor = "ew-resize";
       let f = direction === "right" ? document.body.scrollWidth - e.clientX : e.clientX;
       mainDrawer.style.width = f + "px";
+      $self.navigation.width = f;
     }
 
     if (border !== null) {
@@ -180,14 +184,13 @@ export default class App extends Vue {
 
     document.addEventListener("mouseup", () => {
       mainDrawer.style.transition = "";
-      this.navigation.width = parseFloat(mainDrawer.style.width);
       document.body.style.cursor = "";
       document.removeEventListener("mousemove", resize, false);
     }, false);
   };
 
-  runSQL () {
-    // this.$store.state.editorEventBus.$emit('runSQL')
+  toggleLoginDialog () {
+    this.$store.commit('showLogin', true)
   }
 }
 </script>
@@ -221,6 +224,9 @@ export default class App extends Vue {
 
   .v-window-item {
     height: 100%;
+  }
+  .v-icon.v-icon {
+    font-size: 18px;
   }
 }
 </style>

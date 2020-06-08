@@ -22,8 +22,9 @@ export default class btnIconStack extends Vue {}
 </script>
 
 <style lang="scss" scoped>
+
 .sm-icon {
-  font-size: 14px;
+  font-size: 14px !important;
 }
 
 .v-btn.btn-icon-stack {

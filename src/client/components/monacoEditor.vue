@@ -134,6 +134,21 @@ export default {
       });
 
       $self.editor.addAction({
+        id: "toggle-results-panel",
+        label: "Toggle Results Panel",
+        keybindings: [
+          monaco.KeyMod.chord(
+            monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.US_BACKTICK
+          )
+        ],
+        contextMenuGroupId: "navigation",
+        run() {
+          $self.$store.commit('saveEditorTabContext', { tabIdx: $self.$store.state.viewingEditorTab, showResultsPanel: 'toggle' })
+          return true;
+        }
+      });
+
+      $self.editor.addAction({
         id: "run-sql",
         label: "Run SQL",
         keybindings: [

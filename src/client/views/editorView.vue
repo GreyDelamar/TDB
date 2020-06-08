@@ -1,21 +1,28 @@
   <template>
-  <div ref="editorView" class="editorView">
-    <v-tabs v-if="editorTabs.length" v-model="viewingEditor" show-arrows>
+  <div ref="editorView" class="editorView" v-show="editorTabs.length">
+    <v-tabs v-model="viewingEditor" show-arrows>
       <v-tabs-slider></v-tabs-slider>
       <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2">
-        <div>{{ oE.name }}</div>
-        <small>
-          <div>{{oE.connName}}</div>
-        </small>
+        <div class="d-flex">
+          <div>
+            <div>
+              {{ oE.name }}
+            </div>
+            <small>
+              <div>{{oE.connName}}</div>
+            </small>
+          </div>
+          <div class="ml-3 d-flex flex-column justify-center">
+            <v-icon @click="exitEditor(oE.guiID)">fa-times</v-icon>
+          </div>
+        </div>
       </v-tab>
     </v-tabs>
     <div id="monaco_container">
       <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
-          <keep-alive>
-            <v-data-table :headers="getEditorTabResultKeys(oE.guiID)" :items="getEditorTabResults(oE.guiID)" :items-per-page="5" dense class="elevation-1"></v-data-table>
-          </keep-alive>
+          <ResultsPanelView :show="oE.showResultsPanel" :openEditor="oE" :editorHeight="editorHeight"/>
         </v-tab-item>
       </v-tabs-items>
     </div>
@@ -24,19 +31,22 @@
 
 <script lang="ts">
 import { ipcRenderer } from 'electron';
-import MonacoEditor from "@/components/monacoEditor.vue";
 import { Component, Vue, Watch } from "vue-property-decorator";
+
+import MonacoEditor from "@/components/monacoEditor.vue";
+import ResultsPanelView from "@/components/resultsPanel/panelView.vue";
 
 @Component({
   components: {
-    MonacoEditor
+    MonacoEditor,
+    ResultsPanelView
   }
 })
 export default class EditorTabs extends Vue {
   editor: any
   editorWidth: number | null
   editorHeight: number | null
-  columns = []
+
   constructor() {
     super();
     this.editor = null
@@ -47,6 +57,10 @@ export default class EditorTabs extends Vue {
   mounted () {
     ipcRenderer.on('server:runQuery:result', this.handleQueryResults)
     this.editor = this.$refs['moancoEditorMain']
+
+     //-Listen for the toolbar runSQL btn
+    this.$parent.$parent.$on('runSQL', this.runSQL);
+
     this.$nextTick(() => {
       const el = <HTMLElement>this.$refs['editorView']
       this.editorWidth = el.offsetWidth
@@ -67,28 +81,6 @@ export default class EditorTabs extends Vue {
       console.log(data.error)
     }
   };
-
-  get getEditorTabResultKeys() {
-    return (editorGuiID: string) => {
-      if(this.editorTabsResults[editorGuiID]) {
-        return Object.keys(this.editorTabsResults[editorGuiID].recordset[0]).map(d => ({ text: d, value: d }))
-      }
-
-      return []
-    }
-  }
-
-  get getEditorTabResults() {
-    return (editorGuiID: string) => {
-      if(this.editorTabsResults[editorGuiID]) {
-        let results = this.editorTabsResults[editorGuiID].recordset
-        console.log(results)
-        return results
-      }
-
-      return []
-    }
-  }
 
   get editorTabs () {
     return this.$store.state.editorTabs
@@ -114,15 +106,6 @@ export default class EditorTabs extends Vue {
     return this.$store.getters.mainViewWidth
   }
 
-  get editorTabsResults () {
-    return this.$store.getters.editorTabsResults
-  }
-
-  @Watch('editorTabsResults', { deep: true })
-  editorTabsResultsChange () {
-    this.$store.getters.getCurrentEditorResults //- records
-  }
-
   newEditorTab () {
     const editor = this.$store.getters.getCurrentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
@@ -136,8 +119,14 @@ export default class EditorTabs extends Vue {
     const query = monaco._getValue()
     const selectedText = monaco._getSelectedText()
 
+    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true})
+
     if (!query) return null
     ipcRenderer.send('server:runQuery', server.opts, editor.guiID, (selectedText || query))
+  }
+
+  exitEditor(guiID: string) {
+    this.$store.commit('removeEditorTab', guiID)
   }
 
   @Watch('viewingEditor')
@@ -179,6 +168,7 @@ export default class EditorTabs extends Vue {
 </script>
 
 <style lang="scss" scoped>
+
 .editorView {
   height: 100%;
 }
@@ -200,7 +190,8 @@ export default class EditorTabs extends Vue {
   top: unset;
   bottom: 50px;
   height: auto !important;
-  max-height: 50%;
-  overflow-y: auto;
+  overflow-y: hidden;
+  z-index: 99;
 }
+
 </style>
