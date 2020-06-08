@@ -21,7 +21,24 @@ export default new Vuex.Store({
       window.localStorage.setItem("servers", JSON.stringify(context.servers));
     },
     serverRemove(context, val) {
+      let editorGuiIDs = <any>[]
+
+      // Remove server
       context.servers = context.servers.filter(d => d.guiID !== val);
+
+      // Clear open editors belong to server
+      context.editorTabs = context.editorTabs.filter(d => {
+        if (d.serverGuiID === val) editorGuiIDs.push(d.guiID)
+        return d.serverGuiID !== val
+      });
+
+      // Clear the results out of store
+      for (let idx = 0; idx < editorGuiIDs.length; idx++) {
+        const guiID = editorGuiIDs[idx];
+        delete context.editorTabsResults[guiID]
+      }
+
+      // Set server list in localstorage for later use
       window.localStorage.setItem("servers", JSON.stringify(context.servers));
       if (!context.servers.length) {
         context.showLogin = true
@@ -35,7 +52,9 @@ export default new Vuex.Store({
         guiID: 'editor-tab-'+context.monacoEditorCount,
         name: `SQL ${context.monacoEditorCount}`,
         connName: server.connName || server.name,
-        serverGuiID: server.guiID
+        serverGuiID: server.guiID,
+        showResultsPanel: false,
+        minMaxResultsPanel: null
       })
       context.monacoEditorCount++
     },
@@ -44,11 +63,14 @@ export default new Vuex.Store({
       // Ex. context.editorTabs[context.viewingEditorTab]
       context.viewingEditorTab = idx
     },
-    saveEditorTabContext (context, { tabIdx, state, model, value }) {
-      let currentTab = context.editorTabs[tabIdx]
-      currentTab.state = state
-      currentTab.model = model
-      currentTab.value = value
+    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel }) {
+      let currentTab = context.editorTabs[tabIdx !== undefined ? tabIdx : context.viewingEditorTab]
+      if (state !== undefined) currentTab.state = state
+      if (model !== undefined) currentTab.model = model
+      if (value !== undefined) currentTab.value = value
+      if (showResultsPanel !== undefined) currentTab.showResultsPanel = showResultsPanel === 'toggle' ? !currentTab.showResultsPanel : showResultsPanel
+      if (minMaxResultsPanel !== undefined) currentTab.minMaxResultsPanel = minMaxResultsPanel === 'toggle' ? !currentTab.minMaxResultsPanel : minMaxResultsPanel
+      if (resultsPanelLoading !== undefined) currentTab.resultsPanelLoading = resultsPanelLoading
     },
     mainViewHeight (context, val) {
       context.mainViewHeight = val
@@ -60,7 +82,16 @@ export default new Vuex.Store({
       context.mainViewWidth = val
     },
     editorTabsResults (context, val:any) {
+      let editorTab = context.editorTabs.find(d => d.guiID === val.editorGuiID)
+      if (editorTab) editorTab.resultsPanelLoading = false
       context.editorTabsResults = Object.assign({}, context.editorTabsResults, { [val.editorGuiID]: (val.results || val.error) })
+    },
+    removeEditorTab (context, guiID: string) {
+      // Remove editor tab
+      context.editorTabs = context.editorTabs.filter(d => d.guiID !== guiID);
+
+      // Clear the results out of store
+      delete context.editorTabsResults[guiID]
     }
   },
   actions: {

@@ -20,6 +20,10 @@ declare namespace mainStore {
     name: string
     connName: string
     serverGuiID: string
+    showResultsPanel: boolean
+    resultsPanelLoading?: boolean | undefined
+    resultsPanelHeight?: number | undefined
+    minMaxResultsPanel?: boolean | null
     state?: any
     model?: any
     value?: any
