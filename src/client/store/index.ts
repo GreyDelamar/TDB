@@ -58,6 +58,20 @@ export default new Vuex.Store({
       })
       context.monacoEditorCount++
     },
+    loadFileAddTab (context, {file, server}: { file: loadedFile, server: mainStore.server }) {
+      context.editorTabs.push({
+        guiID: 'editor-tab-'+context.monacoEditorCount,
+        name: `${file.fileName}`,
+        connName: server.connName || server.name,
+        serverGuiID: server.guiID,
+        showResultsPanel: false,
+        minMaxResultsPanel: null,
+        value: file.fileContent,
+        filePath: file.filePath
+      })
+
+      context.monacoEditorCount++
+    },
     viewingEditorTab (context, idx) {
       // It will pass the index postion it is viewing
       // Ex. context.editorTabs[context.viewingEditorTab]
@@ -65,12 +79,14 @@ export default new Vuex.Store({
     },
     saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel }) {
       let currentTab = context.editorTabs[tabIdx !== undefined ? tabIdx : context.viewingEditorTab]
-      if (state !== undefined) currentTab.state = state
-      if (model !== undefined) currentTab.model = model
-      if (value !== undefined) currentTab.value = value
-      if (showResultsPanel !== undefined) currentTab.showResultsPanel = showResultsPanel === 'toggle' ? !currentTab.showResultsPanel : showResultsPanel
-      if (minMaxResultsPanel !== undefined) currentTab.minMaxResultsPanel = minMaxResultsPanel === 'toggle' ? !currentTab.minMaxResultsPanel : minMaxResultsPanel
-      if (resultsPanelLoading !== undefined) currentTab.resultsPanelLoading = resultsPanelLoading
+      if (currentTab) {
+        if (state !== undefined) currentTab.state = state
+        if (model !== undefined) currentTab.model = model
+        if (value !== undefined) currentTab.value = value
+        if (showResultsPanel !== undefined) currentTab.showResultsPanel = showResultsPanel === 'toggle' ? !currentTab.showResultsPanel : showResultsPanel
+        if (minMaxResultsPanel !== undefined) currentTab.minMaxResultsPanel = minMaxResultsPanel === 'toggle' ? !currentTab.minMaxResultsPanel : minMaxResultsPanel
+        if (resultsPanelLoading !== undefined) currentTab.resultsPanelLoading = resultsPanelLoading
+      }
     },
     mainViewHeight (context, val) {
       context.mainViewHeight = val

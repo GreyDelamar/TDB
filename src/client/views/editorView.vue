@@ -56,6 +56,7 @@ export default class EditorTabs extends Vue {
 
   mounted () {
     ipcRenderer.on('server:runQuery:result', this.handleQueryResults)
+    ipcRenderer.on('showOpenDialog:result', this.openFiles)
     this.editor = this.$refs['moancoEditorMain']
 
      //-Listen for the toolbar runSQL btn
@@ -71,6 +72,13 @@ export default class EditorTabs extends Vue {
   beforeDestroy () {
     ipcRenderer.removeListener('server:runQuery:result', this.handleQueryResults)
   };
+
+  openFiles (e: any, data: Array<loadedFile>) {
+    for (let i = 0; i < data.length; i++) {
+      const file = data[i];
+      this.newEditorTab(file)
+    }
+  }
 
   handleQueryResults (e:any, data: any) {
     if (!data.error) {
@@ -106,10 +114,15 @@ export default class EditorTabs extends Vue {
     return this.$store.getters.mainViewWidth
   }
 
-  newEditorTab () {
+  newEditorTab (file?: loadedFile) {
     const editor = this.$store.getters.getCurrentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
-    this.$store.commit('addEditorTab', server)
+    if (file) {
+      this.$store.commit('loadFileAddTab', { file, server })
+      if (this.viewingEditor > (this.editorTabs.length -1)) this.viewingEditorChange(this.editorTabs.length -1, null)
+    } else {
+      this.$store.commit('addEditorTab', server)
+    }
   }
 
   runSQL () {

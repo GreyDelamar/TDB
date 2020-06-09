@@ -11,6 +11,7 @@
 
       </div>
       <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="$emit('runSQL');" />
+      <btnIconStack lineOne="Load File" icon="fa-folder-open" @clicked="showOpenDialog" />
     </v-app-bar>
 
     <v-navigation-drawer
@@ -191,6 +192,10 @@ export default class App extends Vue {
 
   toggleLoginDialog () {
     this.$store.commit('showLogin', true)
+  };
+
+  showOpenDialog () {
+    ipcRenderer.send('showOpenDialog')
   }
 }
 </script>

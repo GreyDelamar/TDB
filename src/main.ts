@@ -1,11 +1,12 @@
 "use strict";
 
-import { app, protocol, BrowserWindow, ipcMain } from "electron";
+import { app, protocol, BrowserWindow, ipcMain, dialog } from "electron";
 import {
   createProtocol
   /* installVueDevtools */
 } from "vue-cli-plugin-electron-builder/lib";
 import { config } from '@vue/test-utils';
+import { promises as fsPromises } from 'fs'
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -17,6 +18,7 @@ let dbWin: BrowserWindow | null;
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true } }
 ]);
+
 
 function createWindow() {
   // Create the browser window.
@@ -138,6 +140,34 @@ ipcMain.on('log:main', (e, val: any) => {
 })
 
 
+// OS file system
+ipcMain.on('showOpenDialog', async () => {
+  try {
+    if (win) {
+      let results = await dialog.showOpenDialog(win, { properties: ['openFile', 'multiSelections'], filters: [ { name: 'SQL Files', extensions: ['sql'] } ] })
+      let files = Array<loadedFile>()
+
+      if (results && !results.canceled) {
+
+        if (results.filePaths) {
+          for (let i = 0; i < results.filePaths.length; i++) {
+            const filePath = results.filePaths[i];
+            let file = await fsPromises.readFile(filePath)
+            files.push({
+              filePath,
+              fileName: filePath.replace(/^.*[\\\/]/, ''),
+              fileContent: file.toString()
+            })
+          }
+        }
+
+        win.webContents.send('showOpenDialog:result', files)
+      }
+    }
+  } catch (error) {
+    if (win) win.webContents.send('log:main', error);
+  }
+})
 
 // --- ROUTER SECTION ---
 
