@@ -38,16 +38,23 @@ export default class mysqlServer {
     }
 
     public close() {
-        // return this.connection.end();
+      return this.pool.end()
     }
 
-    public async runQuery(query: string) {
+    public async runQuery(query: string): Promise<queryResults> {
       const conn = await this.newConnection()
 
-      return new Promise((resolve, reject) => {
+      return <queryResults>await new Promise((resolve, reject) => {
         conn.query(query, async (err, results) => {
-          if(err) reject(err)
-          else resolve(results)
+          if (err) {
+            reject(err)
+          }
+
+          const currentQueryResults = {
+            recordsets: (Array.isArray(results[0]) ? results : [results])
+          }
+
+          resolve(currentQueryResults)
         })
       })
     }
