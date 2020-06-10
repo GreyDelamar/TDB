@@ -9,6 +9,63 @@ export { monaco };
 
 function noop() {}
 
+
+function createDependencyProposals(range, monaco, $store) {
+    // returning a static list of proposals, not even looking at the prefix (filtering is done by the Monaco editor),
+    // here you could do a server side lookup
+
+    if($store.state.database.tables.length <= 0) {
+      return []
+    }
+
+    let proposals = []
+    for(var index in $store.state.database.tables) {
+      const tableName = $store.state.database.tables[index]
+
+      proposals.push({
+        label: tableName,
+        kind: monaco.languages.CompletionItemKind.Function,
+        documentation: `Table named ${tableName}`,
+        insertText: tableName,
+        range: range
+      })
+    }
+
+    return proposals
+
+    /*return [
+        {
+            label: '"lodash"',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: "The Lodash library exported as Node.js modules.",
+            insertText: '"lodash": "*"',
+            range: range
+        },
+        {
+            label: '"express"',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: "Fast, unopinionated, minimalist web framework",
+            insertText: '"express": "*"',
+            range: range
+        },
+        {
+            label: '"artists"',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: "Recursively mkdir, like <code>mkdir -p</code>",
+            insertText: 'artists',
+            range: range
+        },
+        {
+            label: '"users"',
+            kind: monaco.languages.CompletionItemKind.Function,
+            documentation: "Describe your library here",
+            insertText: '"${1:my-third-party-library}": "${2:1.2.3}"',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            range: range
+        }
+    ];*/
+}
+
 export default {
   name: "MonacoEditor",
 
@@ -92,6 +149,32 @@ export default {
     });
 
     this.initMonaco();
+    
+    monaco.languages.registerCompletionItemProvider('sql', {
+    provideCompletionItems: (model, position) => {
+        // find out if we are completing a property in the 'dependencies' object.
+        var textUntilPosition = model.getValueInRange({ startLineNumber: 1, startColumn: 1, endLineNumber: position.lineNumber, endColumn: position.column });
+        var match = textUntilPosition.match(/^SELECT(.*)$/);
+        if (!match) {
+            return { suggestions: [] };
+        }
+        var word = model.getWordUntilPosition(position);
+        var range = {
+            startLineNumber: position.lineNumber,
+            endLineNumber: position.lineNumber,
+            startColumn: word.startColumn,
+            endColumn: word.endColumn
+        };
+        return {
+            suggestions: createDependencyProposals(range, monaco, this.$store)
+        };
+    }
+});
+
+monaco.editor.create(document.getElementById("container"), {
+    value: "{\n\t\"dependencies\": {\n\t\t\n\t}\n}\n",
+    language: "json"
+});
   },
 
   beforeDestroy() {

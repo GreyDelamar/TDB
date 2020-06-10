@@ -67,6 +67,7 @@ export default {
 
     ipcRenderer.on('server:getDatabases:result', (e, data) => {
       if (data.results) {
+
         $self.local_data[data.serverGuiID].children = [...data.results]
       } else if (data.error) {
         $self.columnCalled[data.serverGuiID] = undefined
@@ -79,6 +80,8 @@ export default {
        const server = $self.local_data[data.serverGuiID] || {}
        const children = server.children || []
        const target = children.find(d => d.guiID === data.databaseGuiID) || {}
+    
+        $self.$store.commit('database/setTables', data.results)
 
        target.children = [...data.results]
       } else if (data.error) {
