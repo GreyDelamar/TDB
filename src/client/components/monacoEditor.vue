@@ -3,9 +3,12 @@
 </template>
 
 <script>
-import * as monaco from 'monaco-editor'
+import * as monaco from 'monaco-editor-core';
+// import { getLanguageService, TextDocument } from "vscode-json-languageservice";
+// import { MonacoToProtocolConverter, ProtocolToMonacoConverter } from 'monaco-languageclient/lib/monaco-converter';
 
-export { monaco };
+// import regirterlanguageclient from './monacoLangClient';
+
 
 function noop() {}
 
@@ -92,6 +95,28 @@ export default {
     });
 
     this.initMonaco();
+
+    monaco.languages.registerCompletionItemProvider('sql', {
+      provideCompletionItems: (model, position) => {
+          // find out if we are completing a property in the 'dependencies' object.
+          var textUntilPosition = model.getValueInRange({ startLineNumber: 1, startColumn: 1, endLineNumber: position.lineNumber, endColumn: position.column });
+          var match = textUntilPosition.match(/^SELECT(.*)$/);
+          if (!match) {
+              return { suggestions: [] };
+          }
+          var word = model.getWordUntilPosition(position);
+          var range = {
+              startLineNumber: position.lineNumber,
+              endLineNumber: position.lineNumber,
+              startColumn: word.startColumn,
+              endColumn: word.endColumn
+          };
+          return {
+              suggestions: createDependencyProposals(range, monaco, this.$store)
+          };
+      }
+    });
+
   },
 
   beforeDestroy() {
@@ -115,8 +140,14 @@ export default {
         language: language,
         theme: theme,
         automaticLayout: false,
+        glyphMargin: true,
+        lightbulb: {
+          enabled: true
+        },
         ...options
       });
+
+      monaco
 
       $self.editor.addAction({
         id: "run-sql-formatter",

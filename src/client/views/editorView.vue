@@ -33,7 +33,7 @@
 import { ipcRenderer } from 'electron';
 import { Component, Vue, Watch } from "vue-property-decorator";
 
-import MonacoEditor from "@/components/monacoEditor.vue";
+import MonacoEditor from "@/components/monaco/monacoEditor.vue";
 import ResultsPanelView from "@/components/resultsPanel/panelView.vue";
 
 @Component({
@@ -129,29 +129,29 @@ export default class EditorTabs extends Vue {
     this.$store.commit('removeEditorTab', guiID)
   }
 
-  @Watch('viewingEditor')
-  viewingEditorChange(val: any, oldVal: any) {
-    const editor = this.editor._getEditor()
-    const currentState = editor.saveViewState();
-    const currentModel = editor.getModel();
-    const currentValue = this.editor._getValue();
-    if (oldVal === undefined || oldVal === null) oldVal = val // First load it will be null
+  // @Watch('viewingEditor')
+  // viewingEditorChange(val: any, oldVal: any) {
+  //   const editor = this.editor._getEditor()
+  //   const currentState = editor.saveViewState();
+  //   const currentModel = editor.getModel();
+  //   const currentValue = this.editor._getValue();
+  //   if (oldVal === undefined || oldVal === null) oldVal = val // First load it will be null
 
-    // save old tab state
-    this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
+  //   // save old tab state
+  //   this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
 
-    // get new tab
-    const newEditorTab = this.$store.getters.getCurrentEditorTab
+  //   // get new tab
+  //   const newEditorTab = this.$store.getters.getCurrentEditorTab
 
-    // update editor
-    // if (newEditorTab.model) this.editor._setModel(newEditorTab.modelcurrentModel);
-    // else this.editor._newModel();
-    this.editor._setValue(newEditorTab.value || '');
-    if (newEditorTab.state) editor.restoreViewState(newEditorTab.state);
+  //   // update editor
+  //   // if (newEditorTab.model) this.editor._setModel(newEditorTab.modelcurrentModel);
+  //   // else this.editor._newModel();
+  //   this.editor._setValue(newEditorTab.value || '');
+  //   if (newEditorTab.state) editor.restoreViewState(newEditorTab.state);
 
-    // focus editor
-		editor.focus();
-  }
+  //   // focus editor
+	// 	editor.focus();
+  // }
 
   @Watch('mainViewHeight')
   mainViewHeightChange(val: any) {

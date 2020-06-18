@@ -42,3 +42,4 @@ declare namespace mainStore {
 }
 
 declare module 'vue-resize'
+declare module 'monaco'
