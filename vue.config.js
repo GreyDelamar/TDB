@@ -25,9 +25,6 @@ module.exports = {
     }
   },
   configureWebpack: {
-    externals: {
-      'vscode': 'monaco-languageclient/lib/vscode-compatibility',
-    },
     node: {
       dns: 'mock',
       __dirname: true
@@ -41,6 +38,12 @@ module.exports = {
           }
         }
       ]
+    },
+    resolve: {
+      alias: {
+        'vscode': path.resolve(__dirname + '/node_modules/monaco-languageclient/lib/vscode-compatibility')
+      },
+      extensions: ['.js', '.json', '.ttf']
     }
   }
 };

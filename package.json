@@ -28,7 +28,6 @@
     "sql-formatter": "^2.3.3",
     "sql-query-identifier": "^1.1.0",
     "uuid": "^8.1.0",
-    "vscode": "^1.1.37",
     "vscode-json-languageservice": "^3.4.12",
     "vscode-jsonrpc": "^5.0.1",
     "vscode-languageserver": "^6.1.1",
