@@ -1,5 +1,4 @@
 const path = require('path');
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 module.exports = {
   lintOnSave: false,
@@ -30,9 +29,6 @@ module.exports = {
       dns: 'mock',
       __dirname: true
     },
-    plugins: [
-      new MonacoWebpackPlugin()
-    ],
     module: {
       rules: [
         {
@@ -42,6 +38,12 @@ module.exports = {
           }
         }
       ]
+    },
+    resolve: {
+      alias: {
+        'vscode': path.resolve(__dirname + '/node_modules/monaco-languageclient/lib/vscode-compatibility')
+      },
+      extensions: ['.js', '.json', '.ttf']
     }
   }
 };

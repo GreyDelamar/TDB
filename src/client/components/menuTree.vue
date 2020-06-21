@@ -80,6 +80,8 @@ export default {
        const children = server.children || []
        const target = children.find(d => d.guiID === data.databaseGuiID) || {}
 
+        $self.$store.commit('database/setTables', data.results)
+
        target.children = [...data.results]
       } else if (data.error) {
         $self.columnCalled[data.databaseGuiID] = undefined
