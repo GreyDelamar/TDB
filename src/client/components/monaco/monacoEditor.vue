@@ -94,6 +94,6 @@ export default class monacoEditorContainer extends Vue {
 
 <style lang="scss" scoped>
 .monaco_editor_container {
-  height: 100%;
+  height: calc(100% - 48px) !important;
 }
 </style>
