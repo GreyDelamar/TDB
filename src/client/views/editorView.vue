@@ -59,7 +59,7 @@ export default class EditorTabs extends Vue {
     this.editor = this.$refs['moancoEditorMain']
 
      //-Listen for the toolbar runSQL btn
-    this.$parent.$parent.$on('runSQL', this.runSQL);
+    // this.$parent.$parent.$on('runSQL', this.runSQL);
 
     this.$nextTick(() => {
       const el = <HTMLElement>this.$refs['editorView']
@@ -112,17 +112,14 @@ export default class EditorTabs extends Vue {
     this.$store.commit('addEditorTab', server)
   }
 
-  runSQL () {
+  runSQL (query: string) {
     const editor = this.$store.getters.getCurrentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
-    const monaco = this.editor
-    const query = monaco._getValue()
-    const selectedText = monaco._getSelectedText()
 
     this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true})
 
     if (!query) return null
-    ipcRenderer.send('server:runQuery', server.opts, editor.guiID, (selectedText || query))
+    ipcRenderer.send('server:runQuery', server.opts, editor.guiID, query)
   }
 
   exitEditor(guiID: string) {

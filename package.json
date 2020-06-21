@@ -18,7 +18,7 @@
     "core-js": "^3.6.4",
     "fuse.js": "^6.0.2",
     "lodash": "^4.17.15",
-    "monaco-editor-core": "^0.20.0",
+    "monaco-editor": "^0.20.0",
     "monaco-languageclient": "^0.13.0",
     "mssql": "^6.2.0",
     "mysql": "^2.18.1",
