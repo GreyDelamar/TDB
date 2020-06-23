@@ -27,6 +27,7 @@ declare namespace mainStore {
     state?: any
     model?: any
     value?: any
+    filePath?: string | undefined
   }
 
   interface editorTabsResults {
@@ -39,6 +40,12 @@ declare namespace mainStore {
       error?: string
     }
   }
+}
+
+interface loadedFile {
+  filePath: string,
+  fileName: string,
+  fileContent: string
 }
 
 declare module 'vue-resize'

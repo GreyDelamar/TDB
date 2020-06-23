@@ -161,14 +161,6 @@ export default class sqlServer {
       conn.query(query, (err, data: any) => {
         if (err) rej(err)
         else {
-          if (data && data.recordset) {
-            data.columns = Object.keys(data.recordset.columns)
-            for (let i = 0; i < data.columns.length; i++) {
-              const column = data.columns[i];
-              data.columns[i] = { text: column }
-            }
-          }
-
           res(data)
         }
       })

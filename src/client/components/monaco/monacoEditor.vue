@@ -14,7 +14,7 @@ export default class monacoEditorContainer extends Vue {
   monaco: any
 
   mounted () {
-    this.editor = new monacoBootstrap('monaco_editor_container')
+    this.editor = new monacoBootstrap('monaco_editor_container', this.$store.getters.getCurrentEditorTab)
     this.monaco = this.editor.editor
     this.defaultHotkeys()
   }
@@ -85,6 +85,22 @@ export default class monacoEditorContainer extends Vue {
       contextMenuGroupId: "navigation",
       run() {
         $self.$emit("newEditorTab")
+        return true;
+      }
+    });
+
+    $self.monaco.addAction({
+      id: "toggle-results-panel",
+      label: "Save File",
+      keybindings: [
+        monaco.KeyMod.chord(
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S,
+          NaN
+        )
+      ],
+      contextMenuGroupId: "navigation",
+      run() {
+        $self.$emit("saveFile")
         return true;
       }
     });

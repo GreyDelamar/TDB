@@ -1,5 +1,5 @@
-  <template>
-  <div ref="editorView" class="editorView" v-show="editorTabs.length">
+<template>
+  <div ref="editorView" id="editorView" class="editorView" v-show="editorTabs.length">
     <v-tabs v-model="viewingEditor" show-arrows>
       <v-tabs-slider></v-tabs-slider>
       <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2">
@@ -19,7 +19,7 @@
       </v-tab>
     </v-tabs>
     <div id="monaco_container">
-      <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
+      <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" @saveFile="saveFile" :width="editorWidth" :height="editorHeight"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
           <ResultsPanelView :show="oE.showResultsPanel" :openEditor="oE" :editorHeight="editorHeight"/>
@@ -56,6 +56,9 @@ export default class EditorTabs extends Vue {
 
   mounted () {
     ipcRenderer.on('server:runQuery:result', this.handleQueryResults)
+    ipcRenderer.on('showOpenDialog:result', this.openFiles)
+    ipcRenderer.on('showSaveDialog:result', this.savedFile)
+
     this.editor = this.$refs['moancoEditorMain']
 
      //-Listen for the toolbar runSQL btn
@@ -65,12 +68,40 @@ export default class EditorTabs extends Vue {
       const el = <HTMLElement>this.$refs['editorView']
       this.editorWidth = el.offsetWidth
       this.editorHeight = el.offsetHeight - 48
+
+      el.ondragover = () => {
+        return false;
+      };
+
+      el.ondrop = (e) => {
+        e.preventDefault();
+        let files:Array<loadedFile> = []
+
+        if (e.dataTransfer !== null) {
+          for (let f of e.dataTransfer.files) {
+            files.push({ filePath: f.path, fileName: f.name, fileContent: "" })
+          }
+
+          ipcRenderer.send('draggedFiles', files)
+        }
+
+
+        return false;
+      };
     })
+
   }
 
   beforeDestroy () {
     ipcRenderer.removeListener('server:runQuery:result', this.handleQueryResults)
   };
+
+  openFiles (e: any, data: Array<loadedFile>) {
+    for (let i = 0; i < data.length; i++) {
+      const file = data[i];
+      this.newEditorTab(file)
+    }
+  }
 
   handleQueryResults (e:any, data: any) {
     if (!data.error) {
@@ -106,14 +137,41 @@ export default class EditorTabs extends Vue {
     return this.$store.getters.mainViewWidth
   }
 
-  newEditorTab () {
-    const editor = this.$store.getters.getCurrentEditorTab
+  get currentEditorTab () {
+    return this.$store.getters.getCurrentEditorTab
+  }
+
+  saveFile () {
+    const editor = this.editor.monaco
+    const state = editor.saveViewState()
+    const value = editor.getValue()
+    const filePath = this.currentEditorTab.filePath
+    const guiID = this.currentEditorTab.guiID
+
+    this.$store.commit('saveEditorTabContext', { state: state, value: value })
+
+    ipcRenderer.send('showSaveDialog', { value, filePath, guiID })
+  }
+
+  savedFile (e: any, data: any) {
+    console.log(data)
+    if (data.saved) this.$store.commit('saveEditorTabContext', { filePath: data.filePath, guiID: data.guiID, name: data.fileName })
+    else console.log(data.error)
+  }
+
+  newEditorTab (file?: loadedFile) {
+    const editor = this.currentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
-    this.$store.commit('addEditorTab', server)
+    if (file) {
+      this.$store.commit('loadFileAddTab', { file, server })
+      if (this.viewingEditor > (this.editorTabs.length -1)) this.viewingEditorChange(this.editorTabs.length -1, null)
+    } else {
+      this.$store.commit('addEditorTab', server)
+    }
   }
 
   runSQL (query: string) {
-    const editor = this.$store.getters.getCurrentEditorTab
+    const editor = this.currentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
 
     this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true})
@@ -126,29 +184,28 @@ export default class EditorTabs extends Vue {
     this.$store.commit('removeEditorTab', guiID)
   }
 
-  // @Watch('viewingEditor')
-  // viewingEditorChange(val: any, oldVal: any) {
-  //   const editor = this.editor._getEditor()
-  //   const currentState = editor.saveViewState();
-  //   const currentModel = editor.getModel();
-  //   const currentValue = this.editor._getValue();
-  //   if (oldVal === undefined || oldVal === null) oldVal = val // First load it will be null
+  @Watch('viewingEditor')
+  viewingEditorChange(val: any, oldVal: any) {
+    const editor = this.editor.monaco
+    const currentState = editor.saveViewState();
+    const currentModel = editor.getModel();
+    const currentValue = editor.getValue();
 
-  //   // save old tab state
-  //   this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
+    if (oldVal === undefined || oldVal === null) oldVal = val // First load it will be null
 
-  //   // get new tab
-  //   const newEditorTab = this.$store.getters.getCurrentEditorTab
+    // save old tab state
+    this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
 
-  //   // update editor
-  //   // if (newEditorTab.model) this.editor._setModel(newEditorTab.modelcurrentModel);
-  //   // else this.editor._newModel();
-  //   this.editor._setValue(newEditorTab.value || '');
-  //   if (newEditorTab.state) editor.restoreViewState(newEditorTab.state);
+    // get new tab
+    const newEditorTab = this.currentEditorTab
 
-  //   // focus editor
-	// 	editor.focus();
-  // }
+    // update editor
+    editor.setValue(newEditorTab.value || '');
+    if (newEditorTab.state) editor.restoreViewState(newEditorTab.state);
+
+    // focus editor
+		editor.focus();
+  }
 
   @Watch('mainViewHeight')
   mainViewHeightChange(val: any) {

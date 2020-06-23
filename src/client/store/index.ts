@@ -1,9 +1,13 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import createPersistedState from "vuex-persistedstate";
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
+  plugins: [
+    createPersistedState()
+  ],
   state: {
     servers: Array<mainStore.server>(),
     showLogin: true,
@@ -58,19 +62,44 @@ export default new Vuex.Store({
       })
       context.monacoEditorCount++
     },
+    loadFileAddTab (context, {file, server}: { file: loadedFile, server: mainStore.server }) {
+      context.editorTabs.push({
+        guiID: 'editor-tab-'+context.monacoEditorCount,
+        name: `${file.fileName}`,
+        connName: server.connName || server.name,
+        serverGuiID: server.guiID,
+        showResultsPanel: false,
+        minMaxResultsPanel: null,
+        value: file.fileContent,
+        filePath: file.filePath
+      })
+
+      context.monacoEditorCount++
+    },
     viewingEditorTab (context, idx) {
       // It will pass the index postion it is viewing
       // Ex. context.editorTabs[context.viewingEditorTab]
       context.viewingEditorTab = idx
     },
-    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel }) {
+    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel, filePath, guiID, name }) {
       let currentTab = context.editorTabs[tabIdx !== undefined ? tabIdx : context.viewingEditorTab]
-      if (state !== undefined) currentTab.state = state
-      if (model !== undefined) currentTab.model = model
-      if (value !== undefined) currentTab.value = value
-      if (showResultsPanel !== undefined) currentTab.showResultsPanel = showResultsPanel === 'toggle' ? !currentTab.showResultsPanel : showResultsPanel
-      if (minMaxResultsPanel !== undefined) currentTab.minMaxResultsPanel = minMaxResultsPanel === 'toggle' ? !currentTab.minMaxResultsPanel : minMaxResultsPanel
-      if (resultsPanelLoading !== undefined) currentTab.resultsPanelLoading = resultsPanelLoading
+
+      if (!tabIdx && guiID) {
+        const tmp = context.editorTabs.find(d => d.guiID === guiID) || context.viewingEditorTab
+        if (tmp) currentTab = tmp
+      }
+
+      if (currentTab) {
+        console.log(currentTab)
+        if (state !== undefined) currentTab.state = state
+        if (model !== undefined) currentTab.model = model
+        if (value !== undefined) currentTab.value = value
+        if (showResultsPanel !== undefined) currentTab.showResultsPanel = showResultsPanel === 'toggle' ? !currentTab.showResultsPanel : showResultsPanel
+        if (minMaxResultsPanel !== undefined) currentTab.minMaxResultsPanel = minMaxResultsPanel === 'toggle' ? !currentTab.minMaxResultsPanel : minMaxResultsPanel
+        if (resultsPanelLoading !== undefined) currentTab.resultsPanelLoading = resultsPanelLoading
+        if (filePath !== undefined) currentTab.filePath = filePath
+        if (name !== undefined) currentTab.name = name
+      }
     },
     mainViewHeight (context, val) {
       context.mainViewHeight = val
