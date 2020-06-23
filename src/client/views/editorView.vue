@@ -154,7 +154,6 @@ export default class EditorTabs extends Vue {
   }
 
   savedFile (e: any, data: any) {
-    console.log(data)
     if (data.saved) this.$store.commit('saveEditorTabContext', { filePath: data.filePath, guiID: data.guiID, name: data.fileName })
     else console.log(data.error)
   }
@@ -186,22 +185,28 @@ export default class EditorTabs extends Vue {
 
   @Watch('viewingEditor')
   viewingEditorChange(val: any, oldVal: any) {
+
     const editor = this.editor.monaco
     const currentState = editor.saveViewState();
     const currentModel = editor.getModel();
     const currentValue = editor.getValue();
 
-    if (oldVal === undefined || oldVal === null) oldVal = val // First load it will be null
+    // First load it will be null
+    if (oldVal === undefined || oldVal === null)
+      oldVal = val
 
     // save old tab state
-    this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
+    if (val !== undefined)
+      this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
 
     // get new tab
     const newEditorTab = this.currentEditorTab
 
-    // update editor
+    // update editor state & value
     editor.setValue(newEditorTab.value || '');
-    if (newEditorTab.state) editor.restoreViewState(newEditorTab.state);
+
+    if (newEditorTab.state)
+      editor.restoreViewState(newEditorTab.state);
 
     // focus editor
 		editor.focus();
