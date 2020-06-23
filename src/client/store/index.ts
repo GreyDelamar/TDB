@@ -90,7 +90,6 @@ export default new Vuex.Store({
       }
 
       if (currentTab) {
-        console.log(currentTab)
         if (state !== undefined) currentTab.state = state
         if (model !== undefined) currentTab.model = model
         if (value !== undefined) currentTab.value = value
