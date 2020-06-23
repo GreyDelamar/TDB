@@ -1,47 +1,60 @@
 <template>
-  <v-treeview
-    dense
-    :items="servers"
-    @update:open="open"
-    item-key="guiID"
-    hoverable
-    open-on-click
-    :search="searchTerm"
-    :filter="mainfilter"
-    return-object
-  >
-    <template v-slot:prepend="{ item }">
-      <v-tooltip top>
-        <template v-slot:activator="{ on }">
-          <v-icon v-on="on">
-            {{ "fa-" + item.guiType }}
-          </v-icon>
-        </template>
-        <span style="text-transform: capitalize;">{{ item.guiType === 'columns' ? 'column' : item.guiType }}</span>
-      </v-tooltip>
-    </template>
+  <div style="position: relative">
+    <v-treeview
+      dense
+      :items="servers"
+      @update:open="open"
+      item-key="guiID"
+      hoverable
+      open-on-click
+      :search="searchTerm"
+      :filter="mainfilter"
+      return-object
+    >
+      <template v-slot:prepend="{ item }">
+        <v-tooltip top>
+          <template v-slot:activator="{ on }">
+            <v-icon v-on="on">
+              {{ "fa-" + item.guiType }}
+            </v-icon>
+          </template>
+          <span style="text-transform: capitalize;">{{ item.guiType === 'columns' ? 'column' : item.guiType }}</span>
+        </v-tooltip>
+      </template>
 
-    <template v-slot:append="{ item }">
-      <!-- column text -->
-      <small v-if="item.guiType === 'columns'">
-        (
-        <span v-if="item.hasOwnProperty('constraintType')">{{ constraintText(item.constraintType) }}</span>
-        <span v-if="item.hasOwnProperty('dataType')">{{ item.dataType + ", "}}</span>
-        <span v-if="item.hasOwnProperty('nullable')">{{ item.nullable ? "Null" : "Not Null" }}</span>
-        )
-      </small>
+      <template v-slot:label="{ item }">
+        <div @contextmenu="showRightClickMenu($event, item)">{{ item.name }}</div>
+      </template>
 
-      <!-- disconnect -->
-      <v-tooltip v-if="item.guiType === 'server'" top>
-        <template v-slot:activator="{ on }">
-          <v-btn @click.stop="disconnect(item)" v-on="on" text small>
-            <v-icon style="font-size: 16px;">fa-unlink</v-icon>
-          </v-btn>
-        </template>
-        <span>Disconnect</span>
-      </v-tooltip>
-    </template>
-  </v-treeview>
+      <template v-slot:append="{ item }">
+        <!-- column text -->
+        <small v-if="item.guiType === 'columns'">
+          (
+          <span v-if="item.hasOwnProperty('constraintType')">{{ constraintText(item.constraintType) }}</span>
+          <span v-if="item.hasOwnProperty('dataType')">{{ item.dataType + ", "}}</span>
+          <span v-if="item.hasOwnProperty('nullable')">{{ item.nullable ? "Null" : "Not Null" }}</span>
+          )
+        </small>
+
+        <!-- disconnect -->
+        <v-tooltip v-if="item.guiType === 'server'" top>
+          <template v-slot:activator="{ on }">
+            <v-btn @click.stop="disconnect(item)" v-on="on" text small>
+              <v-icon style="font-size: 16px;">fa-unlink</v-icon>
+            </v-btn>
+          </template>
+          <span>Disconnect</span>
+        </v-tooltip>
+      </template>
+    </v-treeview>
+    <v-menu v-model="showMenu" :position-x="menuX" :position-y="menuY" absolute offset-y>
+      <v-list class="pa-0">
+        <v-list-item class="pa-0">
+          <v-btn @click="newEditorTab" text>New Editor Tab</v-btn>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+  </div>
 </template>
 
 <script>
@@ -109,10 +122,25 @@ export default {
 
   data: () => ({
     local_data: {},
-    columnCalled: {}
+    columnCalled: {},
+    showMenu: false,
+    menuX: 0,
+    menuY: 0,
+    menuContext: null
   }),
 
   methods: {
+    newEditorTab () {
+      console.log(this.menuContext)
+      const server = this.$store.state.servers.find(d => d.guiID === this.menuContext.serverGuiID || this.menuContext.guiID)
+      this.$store.commit('addEditorTab', server)
+    },
+    showRightClickMenu (e, item) {
+      this.menuX = e.x
+      this.menuY = e.y
+      this.showMenu = true,
+      this.menuContext = item
+    },
     toObject(arr) {
       return arr.reduce(function(acc, cur) {
         acc[cur.key] = cur;
