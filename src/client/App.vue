@@ -21,9 +21,14 @@
       ref="mainDrawer"
       permanent
     >
-      <MenuSearch :search.sync="menuSearchVal" />
-      <MenuTree :searchTerm="menuSearchVal" />
-      <resize-observer @notify="handleResize" />
+      <div class="row" style="height: 100%">
+        <MenuSide />
+        <v-navigation-drawer class="grow" permanent>
+          <MenuSearch :search.sync="menuSearchVal" />
+          <MenuTree :searchTerm="menuSearchVal" />
+          <resize-observer @notify="handleResize" />
+        </v-navigation-drawer>
+      </div>
     </v-navigation-drawer>
 
     <!-- Sizes your content based upon application components -->
@@ -44,6 +49,7 @@ import { ipcRenderer } from 'electron';
 import loginDialog from "@/components/loginDialog.vue";
 import MenuSearch from "@/components/menuSearch.vue";
 import MenuTree from "@/components/menuTree.vue";
+import MenuSide from "@/components/menuSide.vue";
 import btnIconStack from "@/components/btnIconStack.vue";
 
 @Component({
@@ -51,7 +57,8 @@ import btnIconStack from "@/components/btnIconStack.vue";
     loginDialog,
     MenuTree,
     MenuSearch,
-    btnIconStack
+    btnIconStack,
+    MenuSide
   },
   computed: {
     showLogin: {
@@ -146,7 +153,8 @@ export default class App extends Vue {
 
   getMenuBorder () {
     const mainDrawer = <HTMLElement>this.$refs.mainDrawer.$el;
-    const border = mainDrawer.querySelector<HTMLElement>(".v-navigation-drawer__border");
+    const borders = this.$refs.mainDrawer.$el.querySelectorAll('.v-navigation-drawer__border')
+    const border = borders[borders.length - 1];
 
     return { mainDrawer, border };
   }

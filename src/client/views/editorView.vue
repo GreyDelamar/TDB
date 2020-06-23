@@ -1,5 +1,5 @@
-  <template>
-  <div ref="editorView" class="editorView" v-show="editorTabs.length">
+<template>
+  <div ref="editorView" id="editorView" class="editorView" v-show="editorTabs.length">
     <v-tabs v-model="viewingEditor" show-arrows>
       <v-tabs-slider></v-tabs-slider>
       <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2">
@@ -66,7 +66,28 @@ export default class EditorTabs extends Vue {
       const el = <HTMLElement>this.$refs['editorView']
       this.editorWidth = el.offsetWidth
       this.editorHeight = el.offsetHeight - 48
+
+      el.ondragover = () => {
+        return false;
+      };
+
+      el.ondrop = (e) => {
+        e.preventDefault();
+        let files:Array<loadedFile> = []
+
+        if (e.dataTransfer !== null) {
+          for (let f of e.dataTransfer.files) {
+            files.push({ filePath: f.path, fileName: f.name, fileContent: "" })
+          }
+
+          ipcRenderer.send('draggedFiles', files)
+        }
+
+
+        return false;
+      };
     })
+
   }
 
   beforeDestroy () {
@@ -139,29 +160,28 @@ export default class EditorTabs extends Vue {
     this.$store.commit('removeEditorTab', guiID)
   }
 
-  // @Watch('viewingEditor')
-  // viewingEditorChange(val: any, oldVal: any) {
-  //   const editor = this.editor._getEditor()
-  //   const currentState = editor.saveViewState();
-  //   const currentModel = editor.getModel();
-  //   const currentValue = this.editor._getValue();
-  //   if (oldVal === undefined || oldVal === null) oldVal = val // First load it will be null
+  @Watch('viewingEditor')
+  viewingEditorChange(val: any, oldVal: any) {
+    const editor = this.editor.monaco
+    const currentState = editor.saveViewState();
+    const currentModel = editor.getModel();
+    const currentValue = editor.getValue();
 
-  //   // save old tab state
-  //   this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
+    if (oldVal === undefined || oldVal === null) oldVal = val // First load it will be null
 
-  //   // get new tab
-  //   const newEditorTab = this.$store.getters.getCurrentEditorTab
+    // save old tab state
+    this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
 
-  //   // update editor
-  //   // if (newEditorTab.model) this.editor._setModel(newEditorTab.modelcurrentModel);
-  //   // else this.editor._newModel();
-  //   this.editor._setValue(newEditorTab.value || '');
-  //   if (newEditorTab.state) editor.restoreViewState(newEditorTab.state);
+    // get new tab
+    const newEditorTab = this.$store.getters.getCurrentEditorTab
 
-  //   // focus editor
-	// 	editor.focus();
-  // }
+    // update editor
+    editor.setValue(newEditorTab.value || '');
+    if (newEditorTab.state) editor.restoreViewState(newEditorTab.state);
+
+    // focus editor
+		editor.focus();
+  }
 
   @Watch('mainViewHeight')
   mainViewHeightChange(val: any) {

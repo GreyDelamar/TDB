@@ -169,6 +169,22 @@ ipcMain.on('showOpenDialog', async () => {
   }
 })
 
+ipcMain.on('draggedFiles', async (e, results: any)=> {
+  let files = []
+
+  console.log(results)
+  for (let i = 0; i < results.length; i++) {
+    let fileInfo = results[i];
+    let file = await fsPromises.readFile(fileInfo.filePath)
+
+    fileInfo.fileContent = file.toString()
+
+    files.push(fileInfo)
+  }
+
+  if (win) win.webContents.send('showOpenDialog:result', files)
+})
+
 // --- ROUTER SECTION ---
 
 //  add connection

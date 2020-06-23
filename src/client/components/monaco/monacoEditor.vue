@@ -14,7 +14,7 @@ export default class monacoEditorContainer extends Vue {
   monaco: any
 
   mounted () {
-    this.editor = new monacoBootstrap('monaco_editor_container')
+    this.editor = new monacoBootstrap('monaco_editor_container', this.$store.getters.getCurrentEditorTab)
     this.monaco = this.editor.editor
     this.defaultHotkeys()
   }
