@@ -88,6 +88,22 @@ export default class monacoEditorContainer extends Vue {
         return true;
       }
     });
+
+    $self.monaco.addAction({
+      id: "toggle-results-panel",
+      label: "Save File",
+      keybindings: [
+        monaco.KeyMod.chord(
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S,
+          NaN
+        )
+      ],
+      contextMenuGroupId: "navigation",
+      run() {
+        $self.$emit("saveFile")
+        return true;
+      }
+    });
   }
 }
 </script>

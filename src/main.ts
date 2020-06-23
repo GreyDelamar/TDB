@@ -140,7 +140,7 @@ ipcMain.on('log:main', (e, val: any) => {
 })
 
 
-// OS file system
+// Load file
 ipcMain.on('showOpenDialog', async () => {
   try {
     if (win) {
@@ -169,10 +169,29 @@ ipcMain.on('showOpenDialog', async () => {
   }
 })
 
+// Save file
+ipcMain.on('showSaveDialog', async (e: any, fileInfo: { filePath?: string, value: string, guiID: string }) => {
+  try {
+    if (fileInfo && fileInfo.filePath) {
+      // already has a file
+      await fsPromises.writeFile(fileInfo.filePath, fileInfo.value)
+      if (win) win.webContents.send('showSaveDialog:result', { guiID: fileInfo.guiID, filePath: fileInfo.filePath, fileName: fileInfo.filePath.replace(/^.*[\\\/]/, ''), saved: true })
+    } else if (win) {
+      // doesn't have a file point it at one
+      const { filePath } = await dialog.showSaveDialog(win, { filters: [ { name: 'SQL Files', extensions: ['sql'] } ] })
+      if (filePath) {
+        await fsPromises.writeFile(filePath, fileInfo.value)
+        if (win) win.webContents.send('showSaveDialog:result', { guiID: fileInfo.guiID, filePath, fileName: filePath.replace(/^.*[\\\/]/, ''), saved: true })
+      }
+    }
+  } catch (error) {
+    if (win) win.webContents.send('showSaveDialog:result', { guiID: fileInfo.guiID, saved: false, error })
+  }
+})
+
 ipcMain.on('draggedFiles', async (e, results: any)=> {
   let files = []
 
-  console.log(results)
   for (let i = 0; i < results.length; i++) {
     let fileInfo = results[i];
     let file = await fsPromises.readFile(fileInfo.filePath)

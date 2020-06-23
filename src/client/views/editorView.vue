@@ -19,7 +19,7 @@
       </v-tab>
     </v-tabs>
     <div id="monaco_container">
-      <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" :width="editorWidth" :height="editorHeight"></MonacoEditor>
+      <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" @saveFile="saveFile" :width="editorWidth" :height="editorHeight"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
           <ResultsPanelView :show="oE.showResultsPanel" :openEditor="oE" :editorHeight="editorHeight"/>
@@ -57,6 +57,8 @@ export default class EditorTabs extends Vue {
   mounted () {
     ipcRenderer.on('server:runQuery:result', this.handleQueryResults)
     ipcRenderer.on('showOpenDialog:result', this.openFiles)
+    ipcRenderer.on('showSaveDialog:result', this.savedFile)
+
     this.editor = this.$refs['moancoEditorMain']
 
      //-Listen for the toolbar runSQL btn
@@ -135,8 +137,30 @@ export default class EditorTabs extends Vue {
     return this.$store.getters.mainViewWidth
   }
 
+  get currentEditorTab () {
+    return this.$store.getters.getCurrentEditorTab
+  }
+
+  saveFile () {
+    const editor = this.editor.monaco
+    const state = editor.saveViewState()
+    const value = editor.getValue()
+    const filePath = this.currentEditorTab.filePath
+    const guiID = this.currentEditorTab.guiID
+
+    this.$store.commit('saveEditorTabContext', { state: state, value: value })
+
+    ipcRenderer.send('showSaveDialog', { value, filePath, guiID })
+  }
+
+  savedFile (e: any, data: any) {
+    console.log(data)
+    if (data.saved) this.$store.commit('saveEditorTabContext', { filePath: data.filePath, guiID: data.guiID, name: data.fileName })
+    else console.log(data.error)
+  }
+
   newEditorTab (file?: loadedFile) {
-    const editor = this.$store.getters.getCurrentEditorTab
+    const editor = this.currentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
     if (file) {
       this.$store.commit('loadFileAddTab', { file, server })
@@ -147,7 +171,7 @@ export default class EditorTabs extends Vue {
   }
 
   runSQL (query: string) {
-    const editor = this.$store.getters.getCurrentEditorTab
+    const editor = this.currentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
 
     this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true})
@@ -173,7 +197,7 @@ export default class EditorTabs extends Vue {
     this.$store.commit('saveEditorTabContext', { tabIdx: oldVal, state: currentState, value: currentValue})
 
     // get new tab
-    const newEditorTab = this.$store.getters.getCurrentEditorTab
+    const newEditorTab = this.currentEditorTab
 
     // update editor
     editor.setValue(newEditorTab.value || '');
