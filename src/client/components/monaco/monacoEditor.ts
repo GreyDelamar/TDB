@@ -4,6 +4,7 @@ import { listen } from 'vscode-ws-jsonrpc';
 import { MonacoServices } from 'monaco-languageclient';
 import { createUrl, createLanguageClient, createWebSocket } from './monacoLSP';
 import Vue from 'vue';
+import { LanguageClient } from 'vscode-languageclient';
 const sqlFormatter = require('sql-formatter');
 
 monaco.editor.setTheme('vs-dark')
@@ -44,20 +45,27 @@ export class monacoBootstrap {
     });
 
     // install Monaco language client services
-    // MonacoServices.install(this.editor);
+    MonacoServices.install(this.editor);
 
     // create the web socket
-    // const url = createUrl('/sampleServer')
-    // const webSocket = createWebSocket(url);
+    const url = createUrl('/sampleServer')
+    const webSocket = createWebSocket(url)
+    
+1
+    const languageClient = createLanguageClient();
+    const disposable = languageClient.start();
+    console.log(disposable)
+
     // // listen when the web socket is opened
-    // listen({
-    //   webSocket,
-    //   onConnection: connection => {
-    //     // create and start the language client
-    //     const languageClient = createLanguageClient(connection);
-    //     const disposable = languageClient.start();
-    //     connection.onClose(() => disposable.dispose());
-    //   }
-    // });
+    listen({
+       webSocket,
+       onConnection: connection => {
+         // create and start the language client
+         console.log('called!')
+         const languageClient = createLanguageClient();
+         const disposable = languageClient.start();
+         connection.onClose(() => disposable.dispose());
+       }
+    });
   }
 }

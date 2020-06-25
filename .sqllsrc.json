@@ -1,0 +1,16 @@
+{
+    "connections": [
+        {
+            "name": "sql-language-server",
+            "adapter": "mysql",
+            "host": "localhost",
+            "port": 3307,
+            "user": "root",
+            "password": "yourpasswordhere",
+            "database": "ds_main",
+            "projectPaths": [
+                "/home/dev/apps/new-db-client"
+            ]
+        }
+    ]
+}
