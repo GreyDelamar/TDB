@@ -1,6 +1,6 @@
 <template>
   <v-navigation-drawer width="calc(100% - 72px)" permanent>
-    <ServerSearch :search.sync="searchVal" />
+    <MenuSearch :search.sync="searchVal" />
     <ServerTree :searchTerm="searchVal" />
     <resize-observer @notify="handleResize" />
   </v-navigation-drawer>
@@ -9,13 +9,13 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 
-import ServerSearch from "@/components/menus/serverSearch.vue";
-import ServerTree from "@/components/menus/serverTree.vue";
+import MenuSearch from "@/components/mainDrawer/menuSearch.vue";
+import ServerTree from "@/components/mainDrawer/serverTree.vue";
 
 @Component({
   components: {
     ServerTree,
-    ServerSearch
+    MenuSearch
   }
 })
 export default class serverMenu extends Vue {

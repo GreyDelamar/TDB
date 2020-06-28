@@ -2,7 +2,7 @@
   <v-sheet class="pa-3 black-icon-color">
     <v-text-field
       v-model="searchTemp"
-      placeholder="Ex. id  (ie 'DB/Table/Column')"
+      :placeholder="placeholder || `Ex. id  (ie 'DB/Table/Column')`"
       dark
       flat
       solo-inverted
@@ -17,7 +17,8 @@ export default {
   name: "serverSearch",
 
   props: {
-    search: String
+    search: String,
+    placeholder: String
   },
 
   data() {

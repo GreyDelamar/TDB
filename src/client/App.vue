@@ -40,9 +40,9 @@ import { ipcRenderer } from 'electron';
 
 import loginDialog from "@/components/loginDialog.vue";
 import btnIconStack from "@/components/btnIconStack.vue";
-import MenuSide from "@/components/menuSide.vue";
-import ServerMenu from "@/components/menus/serverMenu.vue";
-import HistoryMenu from "@/components/menus/historyMenu.vue";
+import MenuSide from "@/components/mainDrawer/menuSide.vue";
+import ServerMenu from "@/components/mainDrawer/serverMenu.vue";
+import HistoryMenu from "@/components/mainDrawer/historyMenu.vue";
 
 @Component({
   components: {
@@ -67,14 +67,6 @@ export default class App extends Vue {
   navigation= { width: 350, borderSize: 5, tab: 1 }
   $refs!: { [key: string]: any}
   menuRoute = 'server'
-
-  constructor() {
-    super();
-
-    this.$nextTick(async () => {
-      console.log('Query History:', await this.$store.dispatch('history/get'))
-    })
-  }
 
   get servers () {
     return this.$store.state.servers

@@ -39,7 +39,7 @@ export default class navDrawer extends Vue {
 
   @Watch('tempTab')
   watchTab (val: any) {
-    this.$emit('update:tab', val)
+    if (val !== undefined) this.$emit('update:tab', val)
   }
 }
 </script>
