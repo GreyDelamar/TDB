@@ -176,6 +176,12 @@ export default class EditorTabs extends Vue {
     this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true})
 
     if (!query) return null
+
+    // this will track query history
+    let history = {...server.opts, ...{ query, createdAt: new Date() }}
+    delete history.password;
+    this.$store.dispatch('history/set', history)
+
     ipcRenderer.send('server:runQuery', server.opts, editor.guiID, query)
   }
 
