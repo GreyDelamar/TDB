@@ -2,7 +2,7 @@
   <v-navigation-drawer color="#1E1E1E" mini-variant mini-variant-width="56" permanent>
     <v-list class="pa-0">
       <v-list-item-group v-model="tempTab" color="primary">
-        <v-list-item v-for="(item, i) in items" :key="i">
+        <v-list-item v-for="(item, i) in items" :key="i" class="pl-3 pr-0">
           <v-list-item-action class="flex justify-center">
             <v-tooltip top>
               <template v-slot:activator="{ on }">
