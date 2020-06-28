@@ -4,7 +4,12 @@
       <v-list-item-group v-model="tempTab" color="primary">
         <v-list-item v-for="(item, i) in items" :key="i">
           <v-list-item-action class="flex justify-center">
-            <v-icon v-text="item.icon"></v-icon>
+            <v-tooltip top>
+              <template v-slot:activator="{ on }">
+                <v-icon v-on="on" v-text="item.icon"></v-icon>
+              </template>
+              <span style="text-transform: capitalize;">{{ item.title }}</span>
+            </v-tooltip>
           </v-list-item-action>
         </v-list-item>
       </v-list-item-group>
@@ -26,7 +31,11 @@ export default class navDrawer extends Vue {
     { title: 'Connections', icon: 'fa-database' },
     { title: 'History', icon: 'fa-history' }
   ]
-  tempTab: number = this.tab
+  tempTab = 1
+
+  mounted() {
+    this.tempTab = this.$props.tab
+  }
 
   @Watch('tempTab')
   watchTab (val: any) {
