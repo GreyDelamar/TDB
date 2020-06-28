@@ -62,7 +62,7 @@ import { mapState } from "vuex";
 import { ipcRenderer } from 'electron';
 
 export default {
-  name: "menuTree",
+  name: "serverTree",
 
   props: {
     searchTerm: String

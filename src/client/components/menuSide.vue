@@ -28,7 +28,7 @@
 <script>
 
 export default {
-  name: "menuSide",
+  name: "serverSide",
 
   props: {
   },

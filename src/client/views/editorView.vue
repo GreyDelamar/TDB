@@ -129,10 +129,6 @@ export default class EditorTabs extends Vue {
     return this.$store.state.servers
   }
 
-  get mainViewHeight () {
-    return this.$store.getters.mainViewHeight
-  }
-
   get mainViewWidth () {
     return this.$store.getters.mainViewWidth
   }
@@ -218,11 +214,6 @@ export default class EditorTabs extends Vue {
 		editor.focus();
   }
 
-  @Watch('mainViewHeight')
-  mainViewHeightChange(val: any) {
-    // minus 50px for the tabs
-    this.editorHeight = val - 50
-  }
 
   @Watch('mainViewWidth')
   mainViewWidthChange(val: any) {

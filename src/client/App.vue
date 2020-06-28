@@ -23,11 +23,7 @@
     >
       <div class="row" style="height: 100%">
         <MenuSide />
-        <v-navigation-drawer class="grow" permanent>
-          <MenuSearch :search.sync="menuSearchVal" />
-          <MenuTree :searchTerm="menuSearchVal" />
-          <resize-observer @notify="handleResize" />
-        </v-navigation-drawer>
+        <ServerMenu />
       </div>
     </v-navigation-drawer>
 
@@ -47,16 +43,14 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { ipcRenderer } from 'electron';
 
 import loginDialog from "@/components/loginDialog.vue";
-import MenuSearch from "@/components/menuSearch.vue";
-import MenuTree from "@/components/menuTree.vue";
-import MenuSide from "@/components/menuSide.vue";
 import btnIconStack from "@/components/btnIconStack.vue";
+import ServerMenu from "@/components/menus/serverMenu.vue";
+import MenuSide from "@/components/menuSide.vue";
 
 @Component({
   components: {
     loginDialog,
-    MenuTree,
-    MenuSearch,
+    ServerMenu,
     btnIconStack,
     MenuSide
   },
@@ -73,29 +67,20 @@ import btnIconStack from "@/components/btnIconStack.vue";
 })
 export default class App extends Vue {
   navigation: { width: number, borderSize: number }
-  menuSearchVal: string
   $refs!: { [key: string]: any}
 
   constructor() {
     super();
     this.navigation = { width: 350, borderSize: 5 }
-    this.menuSearchVal = ""
 
-    this.$nextTick(() => {
+    this.$nextTick(async () => {
       this.mainViewWidth = this.$refs.mainDrawer.$el.offsetWidth  - this.navigation.width
+      console.log('Query History:', await this.$store.dispatch('history/get'))
     })
   }
 
   get servers () {
     return this.$store.state.servers
-  }
-
-  get mainViewHeight () {
-    return this.$store.state.mainViewHeight
-  }
-
-  set mainViewHeight (val) {
-    this.$store.commit('mainViewHeight', val)
   }
 
   get mainViewWidth () {
@@ -105,15 +90,6 @@ export default class App extends Vue {
   set mainViewWidth (val) {
     this.$store.commit('mainViewWidth', val)
   }
-
-  get mainNavWidth () {
-    return this.$store.state.mainNavWidth
-  }
-
-  set mainNavWidth (val) {
-    this.$store.commit('mainNavWidth', val)
-  }
-
 
   beforeMount () {
     let resConn = localStorage.getItem("servers")
@@ -144,11 +120,6 @@ export default class App extends Vue {
 
   handleResizeWidth (e: { width: number, height: number }) {
     this.mainViewWidth = e.width;
-  };
-
-  handleResize (e: { width: number, height: number }) {
-    this.mainViewHeight = e.height;
-    this.mainNavWidth = e.width;
   };
 
   getMenuBorder () {
