@@ -22,6 +22,10 @@ export default class monacoEditorContainer extends Vue {
     this.editor = new monacoBootstrap('monaco_editor_container', this.$store.getters.getCurrentEditorTab)
     this.monaco = this.editor.editor
     this.defaultHotkeys();
+
+    // Listen for the toolbar runSQL btn
+    this.$root.$on('runSQL', this.emitRunSql);
+
     this.$nextTick(() => {
       this.monaco.layout();
     })
@@ -74,9 +78,7 @@ export default class monacoEditorContainer extends Vue {
       ],
       contextMenuGroupId: "navigation",
       run() {
-        const selectedText = $self.monaco.getModel().getValueInRange($self.monaco.getSelection())
-        const query = selectedText || $self.monaco.getValue()
-        $self.$emit("runSQL", query)
+        $self.emitRunSql()
         return true;
       }
     });
@@ -113,6 +115,13 @@ export default class monacoEditorContainer extends Vue {
       }
     });
   };
+
+  emitRunSql () {
+    const $self = this
+    const selectedText = $self.monaco.getModel().getValueInRange($self.monaco.getSelection())
+    const query = selectedText || $self.monaco.getValue()
+    $self.$emit("runSQL", query)
+  }
 
   handleResizeWidth (e: { width: number, height: number }) {
     this.monaco.layout();

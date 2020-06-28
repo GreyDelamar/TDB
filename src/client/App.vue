@@ -6,12 +6,10 @@
 
     <v-app-bar app clipped-left>
       <!-- spacer to match nav drawer - v-app-bar padding -->
-      <div :style="`width: calc(${navigation.width}px - 16px)`">
-        <btnIconStack lineOne="Add" lineTwo="Connection" icon="fa-plug" @clicked="toggleLoginDialog" />
 
-      </div>
-      <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="$emit('runSQL');" />
+      <btnIconStack lineOne="Add" lineTwo="Connection" icon="fa-plug" @clicked="toggleLoginDialog" />
       <btnIconStack lineOne="Load File" icon="fa-folder-open" @clicked="showOpenDialog" />
+      <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="runSQL" />
     </v-app-bar>
 
     <v-navigation-drawer
@@ -162,7 +160,12 @@ export default class App extends Vue {
 
   showOpenDialog () {
     ipcRenderer.send('showOpenDialog')
-  }
+  };
+
+  runSQL () {
+    this.$parent.$emit('runSQL')
+    console.log(this.$parent)
+  };
 }
 </script>
 

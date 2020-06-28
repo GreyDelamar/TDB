@@ -59,9 +59,6 @@ export default class EditorTabs extends Vue {
 
     this.editor = this.$refs['moancoEditorMain']
 
-     //-Listen for the toolbar runSQL btn
-    // this.$parent.$parent.$on('runSQL', this.runSQL);
-
     this.$nextTick(() => {
       const el = <HTMLElement>this.$refs['editorView']
       this.editorHeight = el.offsetHeight - 48
