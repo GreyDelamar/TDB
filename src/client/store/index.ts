@@ -22,8 +22,7 @@ export default new Vuex.Store({
     editorTabsResults: <mainStore.editorTabsResults>{},
     viewingEditorTab: null,
     mainViewHeight: null,
-    mainNavWidth: null,
-    mainViewWidth: null
+    mainNavWidth: null
   },
   mutations: {
     serverAdd(context, val) {
@@ -112,9 +111,6 @@ export default new Vuex.Store({
     mainNavWidth (context, val) {
       context.mainNavWidth = val
     },
-    mainViewWidth (context, val) {
-      context.mainViewWidth = val
-    },
     editorTabsResults (context, val:any) {
       let editorTab = context.editorTabs.find(d => d.guiID === val.editorGuiID)
       if (editorTab) editorTab.resultsPanelLoading = false
@@ -150,9 +146,6 @@ export default new Vuex.Store({
     },
     mainViewHeight (context) {
       return context.mainViewHeight
-    },
-    mainViewWidth (context) {
-      return context.mainViewWidth
     },
     getCurrentEditorResults (context) {
       let editor = context.editorTabs[context.viewingEditorTab || 0]

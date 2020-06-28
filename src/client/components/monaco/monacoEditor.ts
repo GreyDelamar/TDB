@@ -39,8 +39,7 @@ export class monacoBootstrap {
       glyphMargin: false,
       lightbulb: {
         enabled: true
-      },
-      automaticLayout: true
+      }
     });
 
     // on hot reload restore state

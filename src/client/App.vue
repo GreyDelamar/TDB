@@ -23,13 +23,12 @@
     >
       <div class="row" style="height: 100%">
         <MenuSide />
-        <ServerMenu />
+        <ServerMenu v-show="menuRoute === 'server'" />
       </div>
     </v-navigation-drawer>
 
     <!-- Sizes your content based upon application components -->
     <v-content class="pt-0 edit-tabs" ref="mainContent">
-      <resize-observer @notify="handleResizeWidth" />
       <router-view></router-view>
     </v-content>
 
@@ -68,27 +67,19 @@ import MenuSide from "@/components/menuSide.vue";
 export default class App extends Vue {
   navigation: { width: number, borderSize: number }
   $refs!: { [key: string]: any}
+  menuRoute = 'server'
 
   constructor() {
     super();
     this.navigation = { width: 350, borderSize: 5 }
 
     this.$nextTick(async () => {
-      this.mainViewWidth = this.$refs.mainDrawer.$el.offsetWidth  - this.navigation.width
       console.log('Query History:', await this.$store.dispatch('history/get'))
     })
   }
 
   get servers () {
     return this.$store.state.servers
-  }
-
-  get mainViewWidth () {
-    return this.$store.state.mainViewWidth
-  }
-
-  set mainViewWidth (val) {
-    this.$store.commit('mainViewWidth', val)
   }
 
   beforeMount () {
@@ -116,10 +107,6 @@ export default class App extends Vue {
 
   logger (e:any, data:any) {
     console.log('DB LOG - ', data)
-  };
-
-  handleResizeWidth (e: { width: number, height: number }) {
-    this.mainViewWidth = e.width;
   };
 
   getMenuBorder () {

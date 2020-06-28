@@ -19,7 +19,7 @@
       </v-tab>
     </v-tabs>
     <div id="monaco_container">
-      <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" @saveFile="saveFile" :width="editorWidth" :height="editorHeight"></MonacoEditor>
+      <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" @saveFile="saveFile"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
           <ResultsPanelView :show="oE.showResultsPanel" :openEditor="oE" :editorHeight="editorHeight"/>
@@ -44,13 +44,11 @@ import ResultsPanelView from "@/components/resultsPanel/panelView.vue";
 })
 export default class EditorTabs extends Vue {
   editor: any
-  editorWidth: number | null
   editorHeight: number | null
 
   constructor() {
     super();
     this.editor = null
-    this.editorWidth = 0
     this.editorHeight = 0
   }
 
@@ -66,7 +64,6 @@ export default class EditorTabs extends Vue {
 
     this.$nextTick(() => {
       const el = <HTMLElement>this.$refs['editorView']
-      this.editorWidth = el.offsetWidth
       this.editorHeight = el.offsetHeight - 48
 
       el.ondragover = () => {
@@ -127,10 +124,6 @@ export default class EditorTabs extends Vue {
 
   get servers () {
     return this.$store.state.servers
-  }
-
-  get mainViewWidth () {
-    return this.$store.getters.mainViewWidth
   }
 
   get currentEditorTab () {
@@ -214,12 +207,6 @@ export default class EditorTabs extends Vue {
 		editor.focus();
   }
 
-
-  @Watch('mainViewWidth')
-  mainViewWidthChange(val: any) {
-    // minus 50px for the tabs
-    this.editorWidth = val
-  }
 }
 </script>
 
@@ -227,27 +214,13 @@ export default class EditorTabs extends Vue {
 
 .editorView {
   height: 100%;
-}
-
-#monaco_container {
-  height: 100%;
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .monaco_editor_container {
   height: 100%;
   position: relative;
-}
-
-.results-panel {
-  position: absolute;
-  bottom: 50px !important;
-  width: 100%;
-  top: unset;
-  bottom: 50px;
-  height: auto !important;
-  overflow-y: hidden;
-  z-index: 99;
 }
 
 </style>

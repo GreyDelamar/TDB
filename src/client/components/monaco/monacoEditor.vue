@@ -1,5 +1,10 @@
 <template>
-  <div id="monaco_editor_container" class="monaco_editor_container"></div>
+  <div class="monaco_resize">
+    <resize-observer @notify="handleResizeWidth" />
+
+    <div id="monaco_editor_container" class="monaco_editor_container">
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -16,7 +21,10 @@ export default class monacoEditorContainer extends Vue {
   mounted () {
     this.editor = new monacoBootstrap('monaco_editor_container', this.$store.getters.getCurrentEditorTab)
     this.monaco = this.editor.editor
-    this.defaultHotkeys()
+    this.defaultHotkeys();
+    this.$nextTick(() => {
+      this.monaco.layout();
+    })
   }
 
   defaultHotkeys () {
@@ -104,12 +112,26 @@ export default class monacoEditorContainer extends Vue {
         return true;
       }
     });
-  }
+  };
+
+  handleResizeWidth (e: { width: number, height: number }) {
+    this.monaco.layout();
+  };
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+#monaco_container {
+  height: 100%;
+  max-height: calc(100vh - 112px);
+}
+
+.monaco_resize {
+  height: 100%;
+  position: relative;
+}
+
 .monaco_editor_container {
-  height: calc(100% - 48px) !important;
+  height: 100%;
 }
 </style>
