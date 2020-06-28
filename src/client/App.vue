@@ -5,8 +5,6 @@
     <!-- <v-system-bar></v-system-bar> -->
 
     <v-app-bar app clipped-left>
-      <!-- spacer to match nav drawer - v-app-bar padding -->
-
       <btnIconStack lineOne="Add" lineTwo="Connection" icon="fa-plug" @clicked="toggleLoginDialog" />
       <btnIconStack lineOne="Load File" icon="fa-folder-open" @clicked="showOpenDialog" />
       <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="runSQL" />
@@ -20,8 +18,9 @@
       permanent
     >
       <div class="row" style="height: 100%">
-        <MenuSide />
-        <ServerMenu v-show="menuRoute === 'server'" />
+        <MenuSide :tab.sync="navigation.tab"/>
+        <ServerMenu v-show="navigation.tab === 1" />
+        <HistoryMenu v-show="navigation.tab === 2" />
       </div>
     </v-navigation-drawer>
 
@@ -41,15 +40,17 @@ import { ipcRenderer } from 'electron';
 
 import loginDialog from "@/components/loginDialog.vue";
 import btnIconStack from "@/components/btnIconStack.vue";
-import ServerMenu from "@/components/menus/serverMenu.vue";
 import MenuSide from "@/components/menuSide.vue";
+import ServerMenu from "@/components/menus/serverMenu.vue";
+import HistoryMenu from "@/components/menus/historyMenu.vue";
 
 @Component({
   components: {
     loginDialog,
-    ServerMenu,
     btnIconStack,
-    MenuSide
+    MenuSide,
+    ServerMenu,
+    HistoryMenu
   },
   computed: {
     showLogin: {
@@ -63,13 +64,12 @@ import MenuSide from "@/components/menuSide.vue";
   }
 })
 export default class App extends Vue {
-  navigation: { width: number, borderSize: number }
+  navigation= { width: 350, borderSize: 5, tab: 1 }
   $refs!: { [key: string]: any}
   menuRoute = 'server'
 
   constructor() {
     super();
-    this.navigation = { width: 350, borderSize: 5 }
 
     this.$nextTick(async () => {
       console.log('Query History:', await this.$store.dispatch('history/get'))
@@ -134,8 +134,10 @@ export default class App extends Vue {
     function resize(e: any) {
       document.body.style.cursor = "ew-resize";
       let f = direction === "right" ? document.body.scrollWidth - e.clientX : e.clientX;
-      mainDrawer.style.width = f + "px";
-      $self.navigation.width = f;
+      if (f >= 48) {
+        mainDrawer.style.width = f + "px";
+        $self.navigation.width = f;
+      }
     }
 
     if (border !== null) {
@@ -164,7 +166,6 @@ export default class App extends Vue {
 
   runSQL () {
     this.$parent.$emit('runSQL')
-    console.log(this.$parent)
   };
 }
 </script>

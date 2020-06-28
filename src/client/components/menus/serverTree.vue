@@ -131,7 +131,6 @@ export default {
 
   methods: {
     newEditorTab () {
-      console.log(this.menuContext)
       const server = this.$store.state.servers.find(d => d.guiID === this.menuContext.serverGuiID || this.menuContext.guiID)
       this.$store.commit('addEditorTab', server)
     },

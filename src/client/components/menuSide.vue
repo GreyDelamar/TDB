@@ -1,59 +1,38 @@
 <template>
-  <v-navigation-drawer
-    dark
-    mini-variant
-    mini-variant-width="56"
-    permanent
-  >
-    <v-list
-      dense
-      nav
-      class="pr-0"
-    >
-
-      <v-list-item
-        v-for="item in items"
-        :key="item.title"
-        @click="test"
-        class="mb-2"
-      >
-        <v-list-item-action class="flex justify-center">
-          <v-icon>{{ item.icon }}</v-icon>
-        </v-list-item-action>
-      </v-list-item>
+  <v-navigation-drawer color="#1E1E1E" mini-variant mini-variant-width="56" permanent>
+    <v-list class="pa-0">
+      <v-list-item-group v-model="tempTab" color="primary">
+        <v-list-item v-for="(item, i) in items" :key="i">
+          <v-list-item-action class="flex justify-center">
+            <v-icon v-text="item.icon"></v-icon>
+          </v-list-item-action>
+        </v-list-item>
+      </v-list-item-group>
     </v-list>
-</v-navigation-drawer>
+  </v-navigation-drawer>
 </template>
 
-<script>
+<script lang="ts">
+import { Component, Vue, Watch } from "vue-property-decorator";
 
-export default {
-  name: "serverSide",
-
+@Component({
   props: {
-  },
-
-  mounted() {
-    const $self = this;
-
-  },
-
-  data: () => ({
-    items: [{title: 'Quick Connections', icon: 'fa-bolt'}, {title: 'Connections', icon: 'fa-database'}, {title: 'History', icon: 'fa-history'}]
-  }),
-
-  methods: {
-    test () {
-      console.log('HIT')
-    }
-  },
-
-  computed: {
-  },
-
-  watch: {
+    tab: Number
   }
-};
+})
+export default class navDrawer extends Vue {
+  items = [
+    { title: 'Quick Connections', icon: 'fa-bolt' },
+    { title: 'Connections', icon: 'fa-database' },
+    { title: 'History', icon: 'fa-history' }
+  ]
+  tempTab: number = this.tab
+
+  @Watch('tempTab')
+  watchTab (val: any) {
+    this.$emit('update:tab', val)
+  }
+}
 </script>
 
 <style lang="scss" scoped>

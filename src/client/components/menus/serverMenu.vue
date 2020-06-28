@@ -11,7 +11,6 @@ import { Component, Vue } from "vue-property-decorator";
 
 import ServerSearch from "@/components/menus/serverSearch.vue";
 import ServerTree from "@/components/menus/serverTree.vue";
-import MenuSide from "@/components/menuSide.vue";
 
 @Component({
   components: {
