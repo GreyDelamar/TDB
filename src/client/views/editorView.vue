@@ -151,20 +151,23 @@ export default class EditorTabs extends Vue {
       this.$store.commit('loadFileAddTab', { file, server })
       if (this.viewingEditor > (this.editorTabs.length -1)) this.viewingEditorChange(this.editorTabs.length -1, null)
     } else {
-      this.$store.commit('addEditorTab', server)
+      this.$store.commit('addEditorTab', { server })
     }
   }
 
   runSQL (query: string) {
     const editor = this.currentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
+    const monaco = this.editor.monaco
+    const state = monaco.saveViewState();
+    const value = monaco.getValue();
 
-    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true})
+    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true, state, value })
 
     if (!query) return null
 
     // this will track query history
-    let history = {...server.opts, ...{ query, createdAt: new Date() }}
+    let history = {...server.opts, ...{ query, value, state, createdAt: new Date() }}
     delete history.password;
     this.$store.dispatch('history/set', history)
 
@@ -177,10 +180,8 @@ export default class EditorTabs extends Vue {
 
   @Watch('viewingEditor')
   viewingEditorChange(val: any, oldVal: any) {
-
     const editor = this.editor.monaco
     const currentState = editor.saveViewState();
-    const currentModel = editor.getModel();
     const currentValue = editor.getValue();
 
     // First load it will be null

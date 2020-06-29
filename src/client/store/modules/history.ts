@@ -20,7 +20,7 @@ export default {
   actions: {
     async get(context: any, key?: any) {
       if (key !== undefined) return (await dbPromise).get('history', key);
-      else return (await dbPromise).getAll('history');
+      else return (await (await dbPromise).getAll('history')).sort((a, b) => b.createdAt - a.createdAt)
     },
     async set(context: any, data: any) {
       return (await dbPromise).put('history', data);

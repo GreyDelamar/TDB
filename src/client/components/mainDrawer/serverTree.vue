@@ -132,7 +132,7 @@ export default {
   methods: {
     newEditorTab () {
       const server = this.$store.state.servers.find(d => d.guiID === this.menuContext.serverGuiID || this.menuContext.guiID)
-      this.$store.commit('addEditorTab', server)
+      this.$store.commit('addEditorTab', { server })
     },
     showRightClickMenu (e, item) {
       this.menuX = e.x

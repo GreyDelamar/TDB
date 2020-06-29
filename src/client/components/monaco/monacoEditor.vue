@@ -11,7 +11,7 @@
 import * as monaco from 'monaco-editor';
 import { monacoBootstrap } from './monacoEditor'
 
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 
 @Component({})
 export default class monacoEditorContainer extends Vue {
@@ -126,6 +126,21 @@ export default class monacoEditorContainer extends Vue {
   handleResizeWidth (e: { width: number, height: number }) {
     this.monaco.layout();
   };
+
+  get editorTabs () {
+    return this.$store.state.editorTabs
+  }
+
+  @Watch('editorTabs')
+  editorTabWatcher (val: any, oldVal: any) {
+    const editorTab = this.$store.getters.getCurrentEditorTab
+    const nVal = val.find((d: any) => d.guiID === editorTab.guiID)
+    const oVal = oldVal.find((d: any) => d.guiID === editorTab.guiID)
+
+    this.monaco.setValue(nVal.value || '');
+    this.monaco.restoreViewState(nVal.state);
+  }
+
 }
 </script>
 

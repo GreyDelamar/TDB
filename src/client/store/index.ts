@@ -1,8 +1,8 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import createPersistedState from "vuex-persistedstate";
-import history from './modules/history'
-import database from './modules/database'
+import history from './modules/history';
+import database from './modules/database';
 
 Vue.use(Vuex);
 
@@ -56,16 +56,34 @@ export default new Vuex.Store({
     showLogin(context, val) {
       context.showLogin = val;
     },
-    addEditorTab (context, server: mainStore.server) {
-      context.editorTabs.push({
-        guiID: 'editor-tab-'+context.monacoEditorCount,
-        name: `SQL ${context.monacoEditorCount}`,
-        connName: server.connName || server.name,
-        serverGuiID: server.guiID,
-        showResultsPanel: false,
-        minMaxResultsPanel: null
-      })
-      context.monacoEditorCount++
+    addEditorTab (context, { server, editorTab } : { server: mainStore.server, editorTab?: any }) {
+      const tempTabIdx = context.editorTabs.findIndex(d => d.temporary)
+      if (tempTabIdx >= 0) {
+        Vue.set(context.editorTabs, tempTabIdx, {
+          ...context.editorTabs[tempTabIdx],
+          ...{
+            showResultsPanel: false,
+            minMaxResultsPanel: null,
+            state: editorTab?.state,
+            value: editorTab?.value,
+            temporary: editorTab?.value ? true : undefined
+          }
+        })
+      } else {
+        context.editorTabs.push({
+          guiID: 'editor-tab-'+context.monacoEditorCount,
+          name: `SQL ${context.monacoEditorCount}`,
+          connName: server.connName || server.name,
+          serverGuiID: server.guiID,
+          showResultsPanel: false,
+          minMaxResultsPanel: null,
+          state: editorTab?.state,
+          model: editorTab?.model,
+          value: editorTab?.value,
+          temporary: editorTab?.value ? true : undefined
+        })
+        context.monacoEditorCount++
+      }
     },
     loadFileAddTab (context, {file, server}: { file: loadedFile, server: mainStore.server }) {
       context.editorTabs.push({
@@ -129,7 +147,7 @@ export default new Vuex.Store({
       // prevent the same connection showing twice
       if (!context.state.servers.find(d => d.guiID === server.guiID)) {
         context.commit('serverAdd', server)
-        context.commit('addEditorTab', server)
+        context.commit('addEditorTab', { server })
       }
     },
     resumeConnections (context, servers: Array<mainStore.server>) {

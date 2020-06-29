@@ -28,6 +28,7 @@ declare namespace mainStore {
     model?: any
     value?: any
     filePath?: string | undefined
+    temporary?: boolean | undefined
   }
 
   interface editorTabsResults {

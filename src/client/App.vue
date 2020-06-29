@@ -26,7 +26,7 @@
 
     <!-- Sizes your content based upon application components -->
     <v-content class="pt-0 edit-tabs" ref="mainContent">
-      <router-view></router-view>
+      <editorView />
     </v-content>
 
     <!-- <v-footer app> -->
@@ -43,9 +43,11 @@ import btnIconStack from "@/components/btnIconStack.vue";
 import MenuSide from "@/components/mainDrawer/menuSide.vue";
 import ServerMenu from "@/components/mainDrawer/serverMenu.vue";
 import HistoryMenu from "@/components/mainDrawer/historyMenu.vue";
+import editorView from "@/views/editorView.vue";
 
 @Component({
   components: {
+    editorView,
     loginDialog,
     btnIconStack,
     MenuSide,

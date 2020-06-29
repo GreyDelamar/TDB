@@ -3,7 +3,7 @@
     <MenuSearch placeholder="Search History"/>
 
     <v-list class="pa-0" style="height: calc(100vh - 136px); overflow-y: auto;" dense>
-      <v-list-item v-for="item in items" :key="item.title" @click="test">
+      <v-list-item v-for="item in items" :key="item.title" @click="newEditorTab(item)">
         <v-list-item-content>
           <v-list-item-subtitle style="font-size: 0.7rem;">{{ item.createdAt.toLocaleString() }}</v-list-item-subtitle>
           <v-list-item-title style="font-size: 0.8rem;">{{ item.query }}</v-list-item-title>
@@ -35,8 +35,11 @@ export default class historyMenu extends Vue {
     this.items = await this.$store.dispatch('history/get')
   }
 
-  test () {
-    console.log('hit here')
+  newEditorTab (item: any) {
+    const editor = this.$store.getters.getCurrentEditorTab
+    const server = this.$store.state.servers.find((d:any) => d.guiID === editor.serverGuiID)
+    this.$store.commit('addEditorTab', { server, editorTab: item })
   }
+
 }
 </script>
