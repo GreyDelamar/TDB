@@ -1,5 +1,5 @@
 <template>
-  <v-navigation-drawer width="calc(100% - 72px)" permanent>
+  <v-navigation-drawer width="calc(100% - 72px)" permanent style="overflow-y: auto; height: 100%">
     <MenuSearch :search.sync="searchVal" placeholder="Search Connections"/>
     <ServerTree :searchTerm="searchVal" />
     <resize-observer @notify="handleResize" />
