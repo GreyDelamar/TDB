@@ -100,7 +100,7 @@ export default class monacoEditorContainer extends Vue {
     });
 
     $self.monaco.addAction({
-      id: "toggle-results-panel",
+      id: "save-editor-tab",
       label: "Save File",
       keybindings: [
         monaco.KeyMod.chord(

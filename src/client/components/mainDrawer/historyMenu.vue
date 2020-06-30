@@ -1,6 +1,6 @@
 <template>
   <div style="width: calc(100% - 72px);">
-    <MenuSearch placeholder="Search History"/>
+    <MenuSearch :search.sync="searchVal" placeholder="Search History"/>
 
     <v-list class="pa-0" style="height: calc(100vh - 136px); overflow-y: auto;" dense>
       <v-list-item v-for="item in items" :key="item.title" @click="newEditorTab(item)">
@@ -15,9 +15,10 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator"
 
-import MenuSearch from "@/components/mainDrawer/menuSearch.vue";
+import history, { historyRow } from "@/lib/history.ts"
+import MenuSearch from "@/components/mainDrawer/menuSearch.vue"
 
 @Component({
   components: {
@@ -25,20 +26,42 @@ import MenuSearch from "@/components/mainDrawer/menuSearch.vue";
   }
 })
 export default class historyMenu extends Vue {
-  items = []
+  items = Array<historyRow | any>()
+  searchVal = ""
+  searching = false
 
   async mounted() {
-    this.items = await this.$store.dispatch('history/get')
+    this.items = await history.getAll()
   }
 
   async updated() {
-    this.items = await this.$store.dispatch('history/get')
+    if (!this.searching) this.items = await history.getAll()
   }
 
   newEditorTab (item: any) {
     const editor = this.$store.getters.getCurrentEditorTab
     const server = this.$store.state.servers.find((d:any) => d.guiID === editor.serverGuiID)
     this.$store.commit('addEditorTab', { server, editorTab: item })
+  }
+
+  @Watch('searchVal')
+  async searchValChange (val: string) {
+    if (!val) {
+      this.items = []
+      this.searching = false
+      return true;
+    }
+
+    this.searching = true
+    const results = await history.search(val)
+    const tempItems = []
+
+    for (let idx = 0; idx < results.length; idx++) {
+      const res = results[idx];
+      tempItems.push(res.item)
+    }
+
+    this.items = tempItems
   }
 
 }

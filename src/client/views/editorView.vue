@@ -33,6 +33,7 @@
 import { ipcRenderer } from 'electron';
 import { Component, Vue, Watch } from "vue-property-decorator";
 
+import history from "@/lib/history.ts";
 import MonacoEditor from "@/components/monaco/monacoEditor.vue";
 import ResultsPanelView from "@/components/resultsPanel/panelView.vue";
 
@@ -155,23 +156,24 @@ export default class EditorTabs extends Vue {
     }
   }
 
-  runSQL (query: string) {
+  async runSQL (query: string) {
     const editor = this.currentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
     const monaco = this.editor.monaco
     const state = monaco.saveViewState();
     const value = monaco.getValue();
 
+    // update vuex editor state
     this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true, state, value })
 
     if (!query) return null
-
     // this will track query history
-    let history = {...server.opts, ...{ query, value, state, createdAt: new Date() }}
-    delete history.password;
-    this.$store.dispatch('history/set', history)
+    let historyObj = {...server.opts, ...{ query, value, state, createdAt: new Date() }};
+    historyObj.createdAtStr = historyObj.createdAt.toLocaleString();
+    delete historyObj.password;
 
     ipcRenderer.send('server:runQuery', server.opts, editor.guiID, query)
+    await history.set(historyObj)
   }
 
   exitEditor(guiID: string) {

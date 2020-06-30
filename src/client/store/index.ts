@@ -1,15 +1,13 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import createPersistedState from "vuex-persistedstate";
-import history from './modules/history';
 import database from './modules/database';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
   modules: {
-    database,
-    history
+    database
   },
   plugins: [
     createPersistedState()
