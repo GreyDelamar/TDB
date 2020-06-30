@@ -2,7 +2,7 @@
   <v-sheet class="pa-3 black-icon-color">
     <v-text-field
       v-model="searchTemp"
-      :placeholder="placeholder || `Ex. id  (ie 'DB/Table/Column')`"
+      :placeholder="placeholder || 'Search'"
       dark
       flat
       solo-inverted

@@ -1,6 +1,6 @@
 <template>
   <v-navigation-drawer width="calc(100% - 72px)" permanent>
-    <MenuSearch :search.sync="searchVal" />
+    <MenuSearch :search.sync="searchVal" placeholder="Search Connections"/>
     <ServerTree :searchTerm="searchVal" />
     <resize-observer @notify="handleResize" />
   </v-navigation-drawer>
