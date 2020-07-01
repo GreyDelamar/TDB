@@ -102,7 +102,7 @@ export default new Vuex.Store({
       // Ex. context.editorTabs[context.viewingEditorTab]
       context.viewingEditorTab = idx
     },
-    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel, filePath, guiID, name }) {
+    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel, filePath, guiID, name, temporary }) {
       let currentTab = context.editorTabs[tabIdx !== undefined ? tabIdx : context.viewingEditorTab]
 
       if (!tabIdx && guiID) {
@@ -119,6 +119,7 @@ export default new Vuex.Store({
         if (resultsPanelLoading !== undefined) currentTab.resultsPanelLoading = resultsPanelLoading
         if (filePath !== undefined) currentTab.filePath = filePath
         if (name !== undefined) currentTab.name = name
+        if (temporary !== undefined) currentTab.temporary = temporary
       }
     },
     mainViewHeight (context, val) {

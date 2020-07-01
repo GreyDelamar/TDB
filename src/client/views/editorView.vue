@@ -2,9 +2,9 @@
   <div ref="editorView" id="editorView" class="editorView" v-show="editorTabs.length">
     <v-tabs v-model="viewingEditor" show-arrows>
       <v-tabs-slider></v-tabs-slider>
-      <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2">
+      <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2" @dblclick="doubleClicked">
         <div class="d-flex">
-          <div>
+          <div :style="{ fontStyle: oE.temporary ? 'italic' : 'normal' }">
             <div>
               {{ oE.name }}
             </div>
@@ -51,6 +51,16 @@ export default class EditorTabs extends Vue {
     super();
     this.editor = null
     this.editorHeight = 0
+  }
+
+  doubleClicked () {
+    const editor = this.editor.monaco
+    const state = editor.saveViewState()
+    const value = editor.getValue()
+    const filePath = this.currentEditorTab.filePath
+    const guiID = this.currentEditorTab.guiID
+
+    this.$store.commit('saveEditorTabContext', { state: state, value: value, temporary: false })
   }
 
   mounted () {
