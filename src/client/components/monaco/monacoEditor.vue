@@ -25,6 +25,10 @@ export default class monacoEditorContainer extends Vue {
 
     // Listen for the toolbar runSQL btn
     this.$root.$on('runSQL', this.emitRunSql);
+    this.monaco.onDidChangeModelContent(() => {
+      const value = this.monaco.getValue();
+      this.$store.commit('saveEditorTabContext', { value, temporary: false })
+    });
 
     this.$nextTick(() => {
       this.monaco.layout();

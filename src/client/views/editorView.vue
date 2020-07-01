@@ -2,7 +2,7 @@
   <div ref="editorView" id="editorView" class="editorView" v-show="editorTabs.length">
     <v-tabs v-model="viewingEditor" show-arrows>
       <v-tabs-slider></v-tabs-slider>
-      <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2" @dblclick="doubleClicked">
+      <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2" @dblclick="doubleClicked" @mouseover="hover = true" @mouseleave="hover = false">
         <div class="d-flex">
           <div :style="{ fontStyle: oE.temporary ? 'italic' : 'normal' }">
             <div>
@@ -13,7 +13,8 @@
             </small>
           </div>
           <div class="ml-3 d-flex flex-column justify-center">
-            <v-icon @click="exitEditor(oE.guiID)">fa-times</v-icon>
+            <v-icon v-if="hover || !oE.dirty || !oE.savedValue" @click="exitEditor(oE.guiID)">fa-times</v-icon>
+            <v-icon v-else-if="oE.dirty" @click="exitEditor(oE.guiID)" style="font-size: 12px;">fa-circle</v-icon>
           </div>
         </div>
       </v-tab>
@@ -46,6 +47,7 @@ import ResultsPanelView from "@/components/resultsPanel/panelView.vue";
 export default class EditorTabs extends Vue {
   editor: any
   editorHeight: number | null
+  hover = false
 
   constructor() {
     super();
@@ -151,7 +153,7 @@ export default class EditorTabs extends Vue {
   }
 
   savedFile (e: any, data: any) {
-    if (data.saved) this.$store.commit('saveEditorTabContext', { filePath: data.filePath, guiID: data.guiID, name: data.fileName })
+    if (data.saved) this.$store.commit('saveEditorTabContext', { filePath: data.filePath, guiID: data.guiID, name: data.fileName, savedValue: data.fileContent })
     else console.log(data.error)
   }
 

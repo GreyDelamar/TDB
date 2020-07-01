@@ -92,7 +92,9 @@ export default new Vuex.Store({
         showResultsPanel: false,
         minMaxResultsPanel: null,
         value: file.fileContent,
-        filePath: file.filePath
+        filePath: file.filePath,
+        savedValue: file.fileContent,
+        dirty: false
       })
 
       context.monacoEditorCount++
@@ -102,7 +104,7 @@ export default new Vuex.Store({
       // Ex. context.editorTabs[context.viewingEditorTab]
       context.viewingEditorTab = idx
     },
-    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel, filePath, guiID, name, temporary }) {
+    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel, filePath, guiID, name, temporary, savedValue }) {
       let currentTab = context.editorTabs[tabIdx !== undefined ? tabIdx : context.viewingEditorTab]
 
       if (!tabIdx && guiID) {
@@ -113,13 +115,20 @@ export default new Vuex.Store({
       if (currentTab) {
         if (state !== undefined) currentTab.state = state
         if (model !== undefined) currentTab.model = model
-        if (value !== undefined) currentTab.value = value
         if (showResultsPanel !== undefined) currentTab.showResultsPanel = showResultsPanel === 'toggle' ? !currentTab.showResultsPanel : showResultsPanel
         if (minMaxResultsPanel !== undefined) currentTab.minMaxResultsPanel = minMaxResultsPanel === 'toggle' ? !currentTab.minMaxResultsPanel : minMaxResultsPanel
         if (resultsPanelLoading !== undefined) currentTab.resultsPanelLoading = resultsPanelLoading
         if (filePath !== undefined) currentTab.filePath = filePath
         if (name !== undefined) currentTab.name = name
         if (temporary !== undefined) currentTab.temporary = temporary
+        if (savedValue !== undefined) {
+          currentTab.savedValue = savedValue
+          currentTab.dirty = false
+        }
+        if (value !== undefined) {
+          currentTab.value = value
+          currentTab.dirty = currentTab.savedValue !== value
+        }
       }
     },
     mainViewHeight (context, val) {
