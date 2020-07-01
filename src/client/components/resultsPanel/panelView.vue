@@ -40,6 +40,14 @@ export default class ResultsPanelView extends Vue {
 
 <style lang="scss">
   .results-panel {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    top: unset;
+    height: auto !important;
+    overflow-y: hidden;
+    z-index: 3;
+
     .inner-panel {
       position: relative;
 

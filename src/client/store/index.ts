@@ -1,10 +1,14 @@
 import Vue from "vue";
 import Vuex from "vuex";
 import createPersistedState from "vuex-persistedstate";
+import database from './modules/database';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
+  modules: {
+    database
+  },
   plugins: [
     createPersistedState()
   ],
@@ -16,8 +20,7 @@ export default new Vuex.Store({
     editorTabsResults: <mainStore.editorTabsResults>{},
     viewingEditorTab: null,
     mainViewHeight: null,
-    mainNavWidth: null,
-    mainViewWidth: null
+    mainNavWidth: null
   },
   mutations: {
     serverAdd(context, val) {
@@ -51,16 +54,34 @@ export default new Vuex.Store({
     showLogin(context, val) {
       context.showLogin = val;
     },
-    addEditorTab (context, server: mainStore.server) {
-      context.editorTabs.push({
-        guiID: 'editor-tab-'+context.monacoEditorCount,
-        name: `SQL ${context.monacoEditorCount}`,
-        connName: server.connName || server.name,
-        serverGuiID: server.guiID,
-        showResultsPanel: false,
-        minMaxResultsPanel: null
-      })
-      context.monacoEditorCount++
+    addEditorTab (context, { server, editorTab } : { server: mainStore.server, editorTab?: any }) {
+      const tempTabIdx = context.editorTabs.findIndex(d => d.temporary)
+      if (tempTabIdx >= 0) {
+        Vue.set(context.editorTabs, tempTabIdx, {
+          ...context.editorTabs[tempTabIdx],
+          ...{
+            showResultsPanel: false,
+            minMaxResultsPanel: null,
+            state: editorTab?.state,
+            value: editorTab?.value,
+            temporary: editorTab?.value ? true : undefined
+          }
+        })
+      } else {
+        context.editorTabs.push({
+          guiID: 'editor-tab-'+context.monacoEditorCount,
+          name: `SQL ${context.monacoEditorCount}`,
+          connName: server.connName || server.name,
+          serverGuiID: server.guiID,
+          showResultsPanel: false,
+          minMaxResultsPanel: null,
+          state: editorTab?.state,
+          model: editorTab?.model,
+          value: editorTab?.value,
+          temporary: editorTab?.value ? true : undefined
+        })
+        context.monacoEditorCount++
+      }
     },
     loadFileAddTab (context, {file, server}: { file: loadedFile, server: mainStore.server }) {
       context.editorTabs.push({
@@ -71,7 +92,9 @@ export default new Vuex.Store({
         showResultsPanel: false,
         minMaxResultsPanel: null,
         value: file.fileContent,
-        filePath: file.filePath
+        filePath: file.filePath,
+        savedValue: file.fileContent,
+        dirty: false
       })
 
       context.monacoEditorCount++
@@ -81,7 +104,7 @@ export default new Vuex.Store({
       // Ex. context.editorTabs[context.viewingEditorTab]
       context.viewingEditorTab = idx
     },
-    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel, filePath, guiID, name }) {
+    saveEditorTabContext (context, { tabIdx, state, model, value, showResultsPanel, resultsPanelLoading, minMaxResultsPanel, filePath, guiID, name, temporary, savedValue }) {
       let currentTab = context.editorTabs[tabIdx !== undefined ? tabIdx : context.viewingEditorTab]
 
       if (!tabIdx && guiID) {
@@ -92,12 +115,20 @@ export default new Vuex.Store({
       if (currentTab) {
         if (state !== undefined) currentTab.state = state
         if (model !== undefined) currentTab.model = model
-        if (value !== undefined) currentTab.value = value
         if (showResultsPanel !== undefined) currentTab.showResultsPanel = showResultsPanel === 'toggle' ? !currentTab.showResultsPanel : showResultsPanel
         if (minMaxResultsPanel !== undefined) currentTab.minMaxResultsPanel = minMaxResultsPanel === 'toggle' ? !currentTab.minMaxResultsPanel : minMaxResultsPanel
         if (resultsPanelLoading !== undefined) currentTab.resultsPanelLoading = resultsPanelLoading
         if (filePath !== undefined) currentTab.filePath = filePath
         if (name !== undefined) currentTab.name = name
+        if (temporary !== undefined) currentTab.temporary = temporary
+        if (savedValue !== undefined) {
+          currentTab.savedValue = savedValue
+          currentTab.dirty = false
+        }
+        if (value !== undefined) {
+          currentTab.value = value
+          currentTab.dirty = currentTab.savedValue !== value
+        }
       }
     },
     mainViewHeight (context, val) {
@@ -105,9 +136,6 @@ export default new Vuex.Store({
     },
     mainNavWidth (context, val) {
       context.mainNavWidth = val
-    },
-    mainViewWidth (context, val) {
-      context.mainViewWidth = val
     },
     editorTabsResults (context, val:any) {
       let editorTab = context.editorTabs.find(d => d.guiID === val.editorGuiID)
@@ -127,7 +155,7 @@ export default new Vuex.Store({
       // prevent the same connection showing twice
       if (!context.state.servers.find(d => d.guiID === server.guiID)) {
         context.commit('serverAdd', server)
-        context.commit('addEditorTab', server)
+        context.commit('addEditorTab', { server })
       }
     },
     resumeConnections (context, servers: Array<mainStore.server>) {
@@ -144,9 +172,6 @@ export default new Vuex.Store({
     },
     mainViewHeight (context) {
       return context.mainViewHeight
-    },
-    mainViewWidth (context) {
-      return context.mainViewWidth
     },
     getCurrentEditorResults (context) {
       let editor = context.editorTabs[context.viewingEditorTab || 0]

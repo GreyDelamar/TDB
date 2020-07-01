@@ -2,9 +2,9 @@
   <div ref="editorView" id="editorView" class="editorView" v-show="editorTabs.length">
     <v-tabs v-model="viewingEditor" show-arrows>
       <v-tabs-slider></v-tabs-slider>
-      <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2">
+      <v-tab v-for="oE in editorTabs" :key="'tab-'+oE.guiID" class="d-flex flex-column pl-2 pr-2" @dblclick="doubleClicked" @mouseover="hover = true" @mouseleave="hover = false">
         <div class="d-flex">
-          <div>
+          <div :style="{ fontStyle: oE.temporary ? 'italic' : 'normal' }">
             <div>
               {{ oE.name }}
             </div>
@@ -13,13 +13,14 @@
             </small>
           </div>
           <div class="ml-3 d-flex flex-column justify-center">
-            <v-icon @click="exitEditor(oE.guiID)">fa-times</v-icon>
+            <v-icon v-if="hover || !oE.dirty || !oE.savedValue" @click="exitEditor(oE.guiID)">fa-times</v-icon>
+            <v-icon v-else-if="oE.dirty" @click="exitEditor(oE.guiID)" style="font-size: 12px;">fa-circle</v-icon>
           </div>
         </div>
       </v-tab>
     </v-tabs>
     <div id="monaco_container">
-      <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" @saveFile="saveFile" :width="editorWidth" :height="editorHeight"></MonacoEditor>
+      <MonacoEditor ref="moancoEditorMain" @newEditorTab="newEditorTab" @runSQL="runSQL" @saveFile="saveFile"></MonacoEditor>
       <v-tabs-items v-model="viewingEditor" class="results-panel">
         <v-tab-item v-for="oE in editorTabs" :key="'tab-'+oE.guiID">
           <ResultsPanelView :show="oE.showResultsPanel" :openEditor="oE" :editorHeight="editorHeight"/>
@@ -33,6 +34,7 @@
 import { ipcRenderer } from 'electron';
 import { Component, Vue, Watch } from "vue-property-decorator";
 
+import history from "@/lib/history.ts";
 import MonacoEditor from "@/components/monaco/monacoEditor.vue";
 import ResultsPanelView from "@/components/resultsPanel/panelView.vue";
 
@@ -44,14 +46,23 @@ import ResultsPanelView from "@/components/resultsPanel/panelView.vue";
 })
 export default class EditorTabs extends Vue {
   editor: any
-  editorWidth: number | null
   editorHeight: number | null
+  hover = false
 
   constructor() {
     super();
     this.editor = null
-    this.editorWidth = 0
     this.editorHeight = 0
+  }
+
+  doubleClicked () {
+    const editor = this.editor.monaco
+    const state = editor.saveViewState()
+    const value = editor.getValue()
+    const filePath = this.currentEditorTab.filePath
+    const guiID = this.currentEditorTab.guiID
+
+    this.$store.commit('saveEditorTabContext', { state: state, value: value, temporary: false })
   }
 
   mounted () {
@@ -61,12 +72,8 @@ export default class EditorTabs extends Vue {
 
     this.editor = this.$refs['moancoEditorMain']
 
-     //-Listen for the toolbar runSQL btn
-    // this.$parent.$parent.$on('runSQL', this.runSQL);
-
     this.$nextTick(() => {
       const el = <HTMLElement>this.$refs['editorView']
-      this.editorWidth = el.offsetWidth
       this.editorHeight = el.offsetHeight - 48
 
       el.ondragover = () => {
@@ -129,14 +136,6 @@ export default class EditorTabs extends Vue {
     return this.$store.state.servers
   }
 
-  get mainViewHeight () {
-    return this.$store.getters.mainViewHeight
-  }
-
-  get mainViewWidth () {
-    return this.$store.getters.mainViewWidth
-  }
-
   get currentEditorTab () {
     return this.$store.getters.getCurrentEditorTab
   }
@@ -154,7 +153,7 @@ export default class EditorTabs extends Vue {
   }
 
   savedFile (e: any, data: any) {
-    if (data.saved) this.$store.commit('saveEditorTabContext', { filePath: data.filePath, guiID: data.guiID, name: data.fileName })
+    if (data.saved) this.$store.commit('saveEditorTabContext', { filePath: data.filePath, guiID: data.guiID, name: data.fileName, savedValue: data.fileContent })
     else console.log(data.error)
   }
 
@@ -165,18 +164,28 @@ export default class EditorTabs extends Vue {
       this.$store.commit('loadFileAddTab', { file, server })
       if (this.viewingEditor > (this.editorTabs.length -1)) this.viewingEditorChange(this.editorTabs.length -1, null)
     } else {
-      this.$store.commit('addEditorTab', server)
+      this.$store.commit('addEditorTab', { server })
     }
   }
 
-  runSQL (query: string) {
+  async runSQL (query: string) {
     const editor = this.currentEditorTab
     const server = this.servers.find((d:any) => d.guiID === editor.serverGuiID)
+    const monaco = this.editor.monaco
+    const state = monaco.saveViewState();
+    const value = monaco.getValue();
 
-    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true})
+    // update vuex editor state
+    this.$store.commit('saveEditorTabContext', { tabIdx: this.viewingEditor, showResultsPanel: true, resultsPanelLoading: true, state, value })
 
     if (!query) return null
+    // this will track query history
+    let historyObj = {...server.opts, ...{ query, value, state, createdAt: new Date() }};
+    historyObj.createdAtStr = historyObj.createdAt.toLocaleString();
+    delete historyObj.password;
+
     ipcRenderer.send('server:runQuery', server.opts, editor.guiID, query)
+    await history.set(historyObj)
   }
 
   exitEditor(guiID: string) {
@@ -185,10 +194,8 @@ export default class EditorTabs extends Vue {
 
   @Watch('viewingEditor')
   viewingEditorChange(val: any, oldVal: any) {
-
     const editor = this.editor.monaco
     const currentState = editor.saveViewState();
-    const currentModel = editor.getModel();
     const currentValue = editor.getValue();
 
     // First load it will be null
@@ -212,17 +219,6 @@ export default class EditorTabs extends Vue {
 		editor.focus();
   }
 
-  @Watch('mainViewHeight')
-  mainViewHeightChange(val: any) {
-    // minus 50px for the tabs
-    this.editorHeight = val - 50
-  }
-
-  @Watch('mainViewWidth')
-  mainViewWidthChange(val: any) {
-    // minus 50px for the tabs
-    this.editorWidth = val
-  }
 }
 </script>
 
@@ -230,27 +226,13 @@ export default class EditorTabs extends Vue {
 
 .editorView {
   height: 100%;
-}
-
-#monaco_container {
-  height: 100%;
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .monaco_editor_container {
   height: 100%;
   position: relative;
-}
-
-.results-panel {
-  position: absolute;
-  bottom: 50px !important;
-  width: 100%;
-  top: unset;
-  bottom: 50px;
-  height: auto !important;
-  overflow-y: hidden;
-  z-index: 99;
 }
 
 </style>

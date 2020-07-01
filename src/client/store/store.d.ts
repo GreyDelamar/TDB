@@ -26,8 +26,11 @@ declare namespace mainStore {
     minMaxResultsPanel?: boolean | null
     state?: any
     model?: any
-    value?: any
+    value?: string
     filePath?: string | undefined
+    savedValue?: string | undefined
+    temporary?: boolean | undefined
+    dirty?: boolean | undefined
   }
 
   interface editorTabsResults {

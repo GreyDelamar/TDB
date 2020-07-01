@@ -1,5 +1,5 @@
 {
-  "name": "db-changer",
+  "name": "tdb",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,9 +14,11 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@mdi/js": "^5.3.45",
     "axios": "^0.19.2",
     "core-js": "^3.6.4",
-    "fuse.js": "^6.0.2",
+    "fuse.js": "^6.4.0",
+    "idb": "^5.0.4",
     "lodash": "^4.17.15",
     "monaco-editor": "^0.20.0",
     "monaco-languageclient": "^0.13.0",

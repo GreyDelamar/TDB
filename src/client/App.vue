@@ -5,13 +5,9 @@
     <!-- <v-system-bar></v-system-bar> -->
 
     <v-app-bar app clipped-left>
-      <!-- spacer to match nav drawer - v-app-bar padding -->
-      <div :style="`width: calc(${navigation.width}px - 16px)`">
-        <btnIconStack lineOne="Add" lineTwo="Connection" icon="fa-plug" @clicked="toggleLoginDialog" />
-
-      </div>
-      <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="$emit('runSQL');" />
+      <btnIconStack lineOne="Add" lineTwo="Connection" icon="fa-plug" @clicked="toggleLoginDialog" />
       <btnIconStack lineOne="Load File" icon="fa-folder-open" @clicked="showOpenDialog" />
+      <btnIconStack lineOne="Run SQL" icon="fa-play" @clicked="runSQL" />
     </v-app-bar>
 
     <v-navigation-drawer
@@ -22,19 +18,15 @@
       permanent
     >
       <div class="row" style="height: 100%">
-        <MenuSide />
-        <v-navigation-drawer class="grow" permanent>
-          <MenuSearch :search.sync="menuSearchVal" />
-          <MenuTree :searchTerm="menuSearchVal" />
-          <resize-observer @notify="handleResize" />
-        </v-navigation-drawer>
+        <MenuSide :tab.sync="navigation.tab"/>
+        <ServerMenu v-show="navigation.tab === 1" />
+        <HistoryMenu v-show="navigation.tab === 2" />
       </div>
     </v-navigation-drawer>
 
     <!-- Sizes your content based upon application components -->
     <v-content class="pt-0 edit-tabs" ref="mainContent">
-      <resize-observer @notify="handleResizeWidth" />
-      <router-view></router-view>
+      <editorView />
     </v-content>
 
     <!-- <v-footer app> -->
@@ -47,18 +39,20 @@ import { Component, Vue, Watch } from "vue-property-decorator";
 import { ipcRenderer } from 'electron';
 
 import loginDialog from "@/components/loginDialog.vue";
-import MenuSearch from "@/components/menuSearch.vue";
-import MenuTree from "@/components/menuTree.vue";
-import MenuSide from "@/components/menuSide.vue";
 import btnIconStack from "@/components/btnIconStack.vue";
+import MenuSide from "@/components/mainDrawer/menuSide.vue";
+import ServerMenu from "@/components/mainDrawer/serverMenu.vue";
+import HistoryMenu from "@/components/mainDrawer/historyMenu.vue";
+import editorView from "@/views/editorView.vue";
 
 @Component({
   components: {
+    editorView,
     loginDialog,
-    MenuTree,
-    MenuSearch,
     btnIconStack,
-    MenuSide
+    MenuSide,
+    ServerMenu,
+    HistoryMenu
   },
   computed: {
     showLogin: {
@@ -72,48 +66,13 @@ import btnIconStack from "@/components/btnIconStack.vue";
   }
 })
 export default class App extends Vue {
-  navigation: { width: number, borderSize: number }
-  menuSearchVal: string
+  navigation= { width: 350, borderSize: 5, tab: 1 }
   $refs!: { [key: string]: any}
-
-  constructor() {
-    super();
-    this.navigation = { width: 350, borderSize: 5 }
-    this.menuSearchVal = ""
-
-    this.$nextTick(() => {
-      this.mainViewWidth = this.$refs.mainDrawer.$el.offsetWidth  - this.navigation.width
-    })
-  }
+  menuRoute = 'server'
 
   get servers () {
     return this.$store.state.servers
   }
-
-  get mainViewHeight () {
-    return this.$store.state.mainViewHeight
-  }
-
-  set mainViewHeight (val) {
-    this.$store.commit('mainViewHeight', val)
-  }
-
-  get mainViewWidth () {
-    return this.$store.state.mainViewWidth
-  }
-
-  set mainViewWidth (val) {
-    this.$store.commit('mainViewWidth', val)
-  }
-
-  get mainNavWidth () {
-    return this.$store.state.mainNavWidth
-  }
-
-  set mainNavWidth (val) {
-    this.$store.commit('mainNavWidth', val)
-  }
-
 
   beforeMount () {
     let resConn = localStorage.getItem("servers")
@@ -140,15 +99,6 @@ export default class App extends Vue {
 
   logger (e:any, data:any) {
     console.log('DB LOG - ', data)
-  };
-
-  handleResizeWidth (e: { width: number, height: number }) {
-    this.mainViewWidth = e.width;
-  };
-
-  handleResize (e: { width: number, height: number }) {
-    this.mainViewHeight = e.height;
-    this.mainNavWidth = e.width;
   };
 
   getMenuBorder () {
@@ -178,8 +128,10 @@ export default class App extends Vue {
     function resize(e: any) {
       document.body.style.cursor = "ew-resize";
       let f = direction === "right" ? document.body.scrollWidth - e.clientX : e.clientX;
-      mainDrawer.style.width = f + "px";
-      $self.navigation.width = f;
+      if (f >= 48) {
+        mainDrawer.style.width = f + "px";
+        $self.navigation.width = f;
+      }
     }
 
     if (border !== null) {
@@ -204,7 +156,11 @@ export default class App extends Vue {
 
   showOpenDialog () {
     ipcRenderer.send('showOpenDialog')
-  }
+  };
+
+  runSQL () {
+    this.$parent.$emit('runSQL')
+  };
 }
 </script>
 

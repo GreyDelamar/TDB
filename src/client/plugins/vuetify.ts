@@ -20,7 +20,7 @@ export default new Vuetify({
     }
   },
   icons: {
-    iconfont: "fa",
+    iconfont: "mdiSvg",
     values: {
       clear: 'far fa-times-circle'
     }

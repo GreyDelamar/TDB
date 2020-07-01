@@ -32,19 +32,18 @@ export class monacoBootstrap {
     this.eventBus = new Vue();
   }
 
-  private initMonaco(containerID: string, currentTab: any) {
+  private initMonaco(containerID: string, currentTab: any = {}) {
     // create Monaco editor
     this.editor = <any>monaco.editor.create(document.getElementById(containerID)!, {
       model: monaco.editor.createModel(currentTab.value || '', 'sql'),
       glyphMargin: false,
       lightbulb: {
         enabled: true
-      },
-      automaticLayout: true
+      }
     });
 
     // on hot reload restore state
-    this.editor.restoreViewState(currentTab.state);
+    if (currentTab.state !== undefined) this.editor.restoreViewState(currentTab.state);
     // install Monaco language client services
     // MonacoServices.install(this.editor);
 

@@ -1,12 +1,17 @@
 <template>
-  <div id="monaco_editor_container" class="monaco_editor_container"></div>
+  <div class="monaco_resize">
+    <resize-observer @notify="handleResizeWidth" />
+
+    <div id="monaco_editor_container" class="monaco_editor_container">
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
 import * as monaco from 'monaco-editor';
 import { monacoBootstrap } from './monacoEditor'
 
-import { Component, Vue } from "vue-property-decorator";
+import { Component, Vue, Watch } from "vue-property-decorator";
 
 @Component({})
 export default class monacoEditorContainer extends Vue {
@@ -16,7 +21,18 @@ export default class monacoEditorContainer extends Vue {
   mounted () {
     this.editor = new monacoBootstrap('monaco_editor_container', this.$store.getters.getCurrentEditorTab)
     this.monaco = this.editor.editor
-    this.defaultHotkeys()
+    this.defaultHotkeys();
+
+    // Listen for the toolbar runSQL btn
+    this.$root.$on('runSQL', this.emitRunSql);
+    this.monaco.onDidChangeModelContent(() => {
+      const value = this.monaco.getValue();
+      this.$store.commit('saveEditorTabContext', { value, temporary: false })
+    });
+
+    this.$nextTick(() => {
+      this.monaco.layout();
+    })
   }
 
   defaultHotkeys () {
@@ -66,9 +82,7 @@ export default class monacoEditorContainer extends Vue {
       ],
       contextMenuGroupId: "navigation",
       run() {
-        const selectedText = $self.monaco.getModel().getValueInRange($self.monaco.getSelection())
-        const query = selectedText || $self.monaco.getValue()
-        $self.$emit("runSQL", query)
+        $self.emitRunSql()
         return true;
       }
     });
@@ -90,7 +104,7 @@ export default class monacoEditorContainer extends Vue {
     });
 
     $self.monaco.addAction({
-      id: "toggle-results-panel",
+      id: "save-editor-tab",
       label: "Save File",
       keybindings: [
         monaco.KeyMod.chord(
@@ -104,12 +118,48 @@ export default class monacoEditorContainer extends Vue {
         return true;
       }
     });
+  };
+
+  emitRunSql () {
+    const $self = this
+    const selectedText = $self.monaco.getModel().getValueInRange($self.monaco.getSelection())
+    const query = selectedText || $self.monaco.getValue()
+    $self.$emit("runSQL", query)
   }
+
+  handleResizeWidth (e: { width: number, height: number }) {
+    this.monaco.layout();
+  };
+
+  get editorTabs () {
+    return this.$store.state.editorTabs
+  }
+
+  @Watch('editorTabs')
+  editorTabWatcher (val: any, oldVal: any) {
+    const editorTab = this.$store.getters.getCurrentEditorTab
+    const nVal = val.find((d: any) => d.guiID === editorTab.guiID)
+    const oVal = oldVal.find((d: any) => d.guiID === editorTab.guiID)
+
+    this.monaco.setValue(nVal.value || '');
+    this.monaco.restoreViewState(nVal.state);
+  }
+
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+#monaco_container {
+  height: 100%;
+  max-height: calc(100vh - 112px);
+}
+
+.monaco_resize {
+  height: 100%;
+  position: relative;
+}
+
 .monaco_editor_container {
-  height: calc(100% - 48px) !important;
+  height: 100%;
 }
 </style>
