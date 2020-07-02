@@ -12,9 +12,11 @@ import * as monaco from 'monaco-editor';
 import { monacoBootstrap } from './monacoEditor'
 
 import { Component, Vue, Watch } from "vue-property-decorator";
+import { keybindingService } from '@/lib/keybindings';
 
 @Component({})
 export default class monacoEditorContainer extends Vue {
+  keybindingService = new keybindingService()
   editor: any
   monaco: any
 
@@ -35,89 +37,95 @@ export default class monacoEditorContainer extends Vue {
     })
   }
 
+  convertToMonacoHotkey (key: string) {
+    if (key === 'mod') key = /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? 'meta' : 'ctrl'
+  }
+
   defaultHotkeys () {
     const $self = this;
+    const keybindings = this.keybindingService.bindingsBySource('editor')
+    console.log(keybindings[0].keybindings[0].split('+'))
+    monaco.KeyMod
+    // $self.monaco.addAction({
+    //   id: "Format Document",
+    //   label: "Format Document",
+    //   keybindings: [
+    //     monaco.KeyMod.chord(
+    //       monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_B,
+    //       NaN
+    //     )
+    //   ],
+    //   contextMenuGroupId: "navigation",
+    //   run() {
+    //     $self.monaco.getAction("editor.action.formatDocument").run();
+    //     return "";
+    //   }
+    // });
 
-    $self.monaco.addAction({
-      id: "run-sql-formatter",
-      label: "Run SQL Formatter",
-      keybindings: [
-        monaco.KeyMod.chord(
-          monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_B,
-          NaN
-        )
-      ],
-      contextMenuGroupId: "navigation",
-      run() {
-        $self.monaco.getAction("editor.action.formatDocument").run();
-        return "";
-      }
-    });
+    // $self.monaco.addAction({
+    //   id: "toggle-results-panel",
+    //   label: "Toggle Results Panel",
+    //   keybindings: [
+    //     monaco.KeyMod.chord(
+    //       monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.US_BACKTICK,
+    //       NaN
+    //     )
+    //   ],
+    //   contextMenuGroupId: "navigation",
+    //   run() {
+    //     $self.$store.commit('saveEditorTabContext', { tabIdx: $self.$store.state.viewingEditorTab, showResultsPanel: 'toggle' })
+    //     return true;
+    //   }
+    // });
 
-    $self.monaco.addAction({
-      id: "toggle-results-panel",
-      label: "Toggle Results Panel",
-      keybindings: [
-        monaco.KeyMod.chord(
-          monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.US_BACKTICK,
-          NaN
-        )
-      ],
-      contextMenuGroupId: "navigation",
-      run() {
-        $self.$store.commit('saveEditorTabContext', { tabIdx: $self.$store.state.viewingEditorTab, showResultsPanel: 'toggle' })
-        return true;
-      }
-    });
+    // $self.monaco.addAction({
+    //   id: "run-sql",
+    //   label: "Run SQL",
+    //   keybindings: [
+    //     monaco.KeyMod.chord(
+    //       monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
+    //       NaN
+    //     ),
+    //     monaco.KeyCode.F5
+    //   ],
+    //   contextMenuGroupId: "navigation",
+    //   run() {
+    //     $self.emitRunSql()
+    //     return true;
+    //   }
+    // });
 
-    $self.monaco.addAction({
-      id: "run-sql",
-      label: "Run SQL",
-      keybindings: [
-        monaco.KeyMod.chord(
-          monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
-          NaN
-        ),
-        monaco.KeyCode.F5
-      ],
-      contextMenuGroupId: "navigation",
-      run() {
-        $self.emitRunSql()
-        return true;
-      }
-    });
+    // $self.monaco.addAction({
+    //   id: "new-editor-tab",
+    //   label: "New Editor Tab",
+    //   keybindings: [
+    //     monaco.KeyMod.chord(
+    //       monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_T,
+    //       NaN
+    //     )
+    //   ],
+    //   contextMenuGroupId: "navigation",
+    //   run() {
+    //     $self.$emit("newEditorTab")
+    //     return true;
+    //   }
+    // });
 
-    $self.monaco.addAction({
-      id: "new-editor-tab",
-      label: "New Editor Tab",
-      keybindings: [
-        monaco.KeyMod.chord(
-          monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KEY_T,
-          NaN
-        )
-      ],
-      contextMenuGroupId: "navigation",
-      run() {
-        $self.$emit("newEditorTab")
-        return true;
-      }
-    });
-
-    $self.monaco.addAction({
-      id: "save-editor-tab",
-      label: "Save File",
-      keybindings: [
-        monaco.KeyMod.chord(
-          monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S,
-          NaN
-        )
-      ],
-      contextMenuGroupId: "navigation",
-      run() {
-        $self.$emit("saveFile")
-        return true;
-      }
-    });
+    // $self.monaco.addAction({
+    //   id: "save-editor-tab",
+    //   label: "Save File",
+    //   keybindings: [
+    //     monaco.KeyMod.chord(
+    //       monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S,
+    //       NaN
+    //     )
+    //   ],
+    //   contextMenuGroupId: "navigation",
+    //   run() {
+    //     $self.$emit("saveFile")
+    //     return true;
+    //   }
+    // });
   };
 
   emitRunSql () {
@@ -138,6 +146,8 @@ export default class monacoEditorContainer extends Vue {
   @Watch('editorTabs')
   editorTabWatcher (val: any, oldVal: any) {
     const editorTab = this.$store.getters.getCurrentEditorTab
+
+    if (!editorTab) return
     const nVal = val.find((d: any) => d.guiID === editorTab.guiID)
     const oVal = oldVal.find((d: any) => d.guiID === editorTab.guiID)
 

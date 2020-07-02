@@ -1,0 +1,30 @@
+[
+  {
+    "label": "Format Document",
+    "id": "format-document",
+    "contextMenuGroupId": "navigation",
+    "source": "editor",
+    "keybindings": [
+      "mod+b"
+    ]
+  },
+  {
+    "label": "Toggle Results Panel",
+    "id": "toggle-results-panel",
+    "contextMenuGroupId": "navigation",
+    "source": "editor",
+    "keybindings": [
+      "mod+shift+`"
+    ]
+  },
+  {
+    "label": "Run SQL",
+    "id": "run-sqll",
+    "contextMenuGroupId": "navigation",
+    "source": "editor",
+    "keybindings": [
+      "mod+enter",
+      "f5"
+    ]
+  }
+]

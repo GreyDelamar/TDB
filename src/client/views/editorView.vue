@@ -208,6 +208,7 @@ export default class EditorTabs extends Vue {
 
     // get new tab
     const newEditorTab = this.currentEditorTab
+    if (!newEditorTab) return
 
     // update editor state & value
     editor.setValue(newEditorTab.value || '');
