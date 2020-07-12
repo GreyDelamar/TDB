@@ -16,6 +16,7 @@
       :width="navigation.width"
       ref="mainDrawer"
       permanent
+      v-if="connectedWithServer"
     >
       <div class="row" style="height: 100%">
         <MenuSide :tab.sync="navigation.tab"/>
@@ -26,7 +27,9 @@
 
     <!-- Sizes your content based upon application components -->
     <v-content class="pt-0 edit-tabs" ref="mainContent">
-      <editorView />
+      <!-- <editorView /> -->
+      <connectionView v-if="connectedWithServer == false" />
+      <editorView v-else />
     </v-content>
 
     <!-- <v-footer app> -->
@@ -44,6 +47,7 @@ import MenuSide from "@/components/mainDrawer/menuSide.vue";
 import ServerMenu from "@/components/mainDrawer/serverMenu.vue";
 import HistoryMenu from "@/components/mainDrawer/historyMenu.vue";
 import editorView from "@/views/editorView.vue";
+import connectionView from "@/views/connectionView.vue";
 
 @Component({
   components: {
@@ -52,7 +56,8 @@ import editorView from "@/views/editorView.vue";
     btnIconStack,
     MenuSide,
     ServerMenu,
-    HistoryMenu
+    HistoryMenu,
+    connectionView
   },
   computed: {
     showLogin: {
@@ -69,6 +74,10 @@ export default class App extends Vue {
   navigation= { width: 350, borderSize: 5, tab: 1 }
   $refs!: { [key: string]: any}
   menuRoute = 'server'
+
+  get connectedWithServer() {
+    return this.$store.state.connectedWithServer
+  }
 
   get servers () {
     return this.$store.state.servers
