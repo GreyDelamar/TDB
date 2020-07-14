@@ -65,13 +65,16 @@ connPro.addIPC('server:removeConnection', async (e: any, options: connectionConf
 })
 
 connPro.addIPC('server:runQuery', async (e: any, options: connectionConfig, editorGuiID: string, query: string) => {
+  let RanAt = new Date()
   try {
     const client = await connPro.getConnection(options)
     let results = await client.runQuery(query)
+    results.localRanAt = RanAt
     connPro.send('server:runQuery:result', { serverGuiID: options.guiID, editorGuiID, results })
   } catch (error) {
+    error.error = true //- easy frontend check
+    error.localRanAt = RanAt
     connPro.send('server:runQuery:result', { serverGuiID: options.guiID, editorGuiID, error })
-    console.log('SOMETHING HAPPENED?', error)
   }
 })
 
