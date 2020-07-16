@@ -111,12 +111,11 @@ export default class EditorTabs extends Vue {
   }
 
   handleQueryResults (e:any, data: any) {
+    this.$store.commit('editorTabsResults', data)
     if (!data.error) {
       console.log('Got results')
-      this.$store.commit('editorTabsResults', data)
     } else {
       console.log('Something went wrong')
-      console.log(data.error)
     }
   };
 
