@@ -9,9 +9,13 @@
 
                 <!-- Connection Card -->
                 <v-card
+                    dark
+                    
+                    elevation=10
                     class="pa-2"
-                    outlined
                     tile
+                    border="left"
+                    
                 >
                     <!-- Connection Name -->
                     <v-card-title class="headline mb-1">{{ server.name }}</v-card-title>
@@ -23,8 +27,8 @@
                     <v-card-text class="mt-0 pt-0"><i class="fas fa-database mr-2"></i> {{ server.opts.serverType }}</v-card-text>
 
                     <v-card-actions>
-                        <v-btn color="success"  @click="handleServerConnect(server.guiID)">Connect</v-btn>
-                        <v-btn color="red accent-3" @click="handleServerRemove(server.guiID)">Remove</v-btn>
+                        <v-btn text color="success" @click="handleServerConnect(server.guiID)">Connect</v-btn>
+                        <v-btn text color="red accent-3" @click="handleServerRemove(server.guiID)">Remove</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-col>
