@@ -39,7 +39,7 @@ export default new Vuex.Store({
       context.servers = context.servers.filter(d => d.guiID !== val);
 
       if (context.servers.length <= 0) {
-        console.log('jere');
+        // Set global connectedWithServer flag to false
         context.connectedWithServer = false
       }
 
