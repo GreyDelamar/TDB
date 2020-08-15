@@ -1,5 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
+
 import createPersistedState from "vuex-persistedstate";
 import database from './modules/database';
 
@@ -13,6 +14,7 @@ export default new Vuex.Store({
     createPersistedState()
   ],
   state: {
+    connectedWithServer: false,
     servers: Array<mainStore.server>(),
     showLogin: true,
     monacoEditorCount: 1,
@@ -23,6 +25,9 @@ export default new Vuex.Store({
     mainNavWidth: null
   },
   mutations: {
+    setServerConnectionStatus(context, boolean: boolean) {
+      context.connectedWithServer = boolean
+    },
     serverAdd(context, val) {
       context.servers.push(val);
       window.localStorage.setItem("servers", JSON.stringify(context.servers));
@@ -32,6 +37,11 @@ export default new Vuex.Store({
 
       // Remove server
       context.servers = context.servers.filter(d => d.guiID !== val);
+
+      if (context.servers.length <= 0) {
+        // Set global connectedWithServer flag to false
+        context.connectedWithServer = false
+      }
 
       // Clear open editors belong to server
       context.editorTabs = context.editorTabs.filter(d => {
@@ -151,6 +161,25 @@ export default new Vuex.Store({
     }
   },
   actions: {
+    connectServer(context, serverGuid) {
+
+      const server = context.state.servers.filter(server => server.guiID !== serverGuid);
+
+      if(server) {
+        context.commit('addEditorTab', { server })  
+        context.commit('setServerConnectionStatus', true)
+      }
+    },
+    removeServer(context, serverGuid: string) {
+
+      if(context.state.servers.length <= 1) {
+        context.commit('setServerConnectionStatus', false)
+      }
+
+      context.commit('serverRemove', serverGuid)
+
+
+    },
     addNewServer (context, server: mainStore.server) {
       // prevent the same connection showing twice
       if (!context.state.servers.find(d => d.guiID === server.guiID)) {

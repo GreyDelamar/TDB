@@ -25,6 +25,7 @@ module.exports = {
     }
   },
   configureWebpack: {
+    devtool: 'source-map',
     node: {
       dns: 'mock',
       __dirname: true

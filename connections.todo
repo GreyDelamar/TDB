@@ -1,0 +1,17 @@
+
+Todo list for Connection Feature
+
+Frontend:
+    ☐ Input a master password to view connections
+    ☐ New page for listing out connections
+        ☐ List of cards with desc of each connection
+        ☐ Click to open connection and show tab view
+    ☐ Use connection sidebar to switch between connections
+
+Backend:
+    ☐ Store connections in a encrypted json file only accessible by entering a master password
+    ☐ Logic
+        ☐ Filename should be connections.json
+        ☐ Data is encypted
+        ☐ Attempted to decypt using user inputed password
+        ☐ On success show the connections page

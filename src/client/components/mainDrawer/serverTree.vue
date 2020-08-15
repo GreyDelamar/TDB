@@ -194,7 +194,7 @@ export default {
     },
     disconnect(val) {
       ipcRenderer.send('server:removeConnection', val)
-      this.$store.commit('serverRemove', val.guiID)
+      this.$store.dispatch('removeServer', val.guiID)
     }
   },
 
